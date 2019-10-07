@@ -1,0 +1,10 @@
+	Control	Treated
+Mouse1	3.77	4.15
+Mouse2	3.07	4.03
+Mouse3	4.00	3.03
+Mouse4	3.85	4.21
+Mouse5	3.11	3.99
+Mouse6	3.21	3.96
+Mouse7	3.43	3.95
+Mouse8	3.03	3.10
+Mouse9	3.13	NA
