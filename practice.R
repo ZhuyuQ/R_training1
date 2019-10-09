@@ -13,6 +13,7 @@ library(tidyverse)
 library(ggplot2)
 library(dplyr)
 library(tidyr)
+library(broom)
 
 ### FUNCTION_1 ######################################################
 #Input variables:
@@ -90,11 +91,95 @@ tumor2 = read.table("/cloud/project/input2.txt", header=T);
 tumor1.sort = arrange(tumor1,GeneID);
 tumor2.sort = arrange(tumor2,GeneID);
 tumor.sort.cbind = cbind(tumor1.sort, tumor2.sort)
-
+tumor.sort.cbind = tumor.sort.cbind[,-5]
 #2.2 Merge
 tumor.merge = merge(tumor1, tumor2, all=T)
+#2.3 Verify if they get the same results
+table(tumor.sort.cbind == tumor.merge, useNA = 'ifany')
+# after removing the repeated gene ID colums in the sort&cbind way, the two ways gave the same results.
+
+# 3. Perform a t-test comparing the first three tumours to the last nine tumours for *each* gene using a for-loo
+# create empty dataframe to put p values
+
+emptydf = function(numrow, numcol, type, name){
+  df = data.frame(matrix(NA, nrow=numrow, ncol=numcol));
+  for (i in 1:numcol){
+    print(type[i])
+    if(type[i] == 'numeric') {df[,i] = as.numeric(df[,i])
+                               colnames(df)[i] = name[i]};
+    if(type[i] == 'character') {df[,i] = as.character(df[,i])
+                                colnames(df)[i] = name[i]};
+    if(type[i] == 'logical') {df[,i] = as.logical(df[,i])
+                            colnames(df)[i] = name[i]};
+    if(type[i] == 'factor') {df[,i] = as.factor(df[,i])
+                              colnames(df)[i] = name[i]};
+  }
+  return(df);
+}
+   
+tumor.ttest = emptydf(500, 2, c('character','numeric'), c('GeneID', 'pvalue'));
+
+tumor.ttest$GeneID=tumor.merge$GeneID;
+
+# perform ttest
+for (i in 1:nrow(tumor.merge)){
+  tumor.ttest[i,2] = tidy(t.test(tumor.merge[i,2:4],tumor.merge[i,5:13]))$p.value;
+}  
+
+# 4. histogram of the p values
+ggplot(tumor.ttest,aes(pvalue)) + geom_histogram(binwidth = 0.025);
+
+# 5. It's not rotated
+
+# 6. plot pvalues in log space
+tumor.ttest$log.pvalue = log(tumor.ttest$pvalue);
+ggplot(tumor.ttest, aes(log.pvalue)) + geom_histogram();
+
+# 7. Since log(0.05)=-3, from the plot we can find out that most p values from the ttest
+# are greater than 0.05. Therefore, among the 500 genes, there don't exsit a significant 
+# mRNA levels differnece between Tumor type A and type B.
+nrow(tumor.ttest[tumor.ttest$pvalue<=0.05,]);#33
 
 
+### Question3 ########################################################################
 
+# 1.Wilcoxon test
+# create empty dataframe
+tumor.wilcoxon = emptydf(500, 2, c('character','numeric'), c('GeneID', 'pvalue'));
+
+tumor.wilcoxon$GeneID = tumor.merge$GeneID;
+# perform wilcoxon rank sum test
+for (i in 1:nrow(tumor.merge)){
+  tumor.wilcoxon[i,2] = tidy(wilcox.test(unlist(tumor.merge[i,2:4]), unlist(tumor.merge[i,5:13]), 
+                          alternative = "two.sided"))$p.value;
+}
+# 14 warnings show there are tied data
+
+# plot histogram
+ggplot(tumor.wilcoxon,aes(pvalue)) + geom_histogram(binwidth = 0.05);
+
+#log transform the p values and plot the histogram
+tumor.wilcoxon$log.pvalue = log(tumor.wilcoxon$pvalue);
+ggplot(tumor.wilcoxon, aes(log.pvalue)) + geom_histogram();
+
+nrow(tumor.wilcoxon[tumor.wilcoxon$pvalue<=0.05,]);#24
+
+
+# 3. fold change
+tumor.fc = tumor.merge %>%
+  as_tibble()%>%
+  mutate(mean.a = (Patient1+Patient2+Patient3)/3,
+            mean.b = rowSums(.[5:13])/9,
+         log.mean.a = log2(mean.a),
+         log.mean.b = log2(mean.b),
+         logfc=log.mean.b - log.mean.a) %>%
+  select(GeneID, logfc)
+
+ggplot(tumor.fc, aes(logfc)) + geom_histogram(binwidth = 0.01)
+
+
+# Both the t test and wilcoxon log p values histgrams shows a log normal trend
+#and gave similar results about the p value
+# the fold change histgram shows a more normal trend.
 
 
