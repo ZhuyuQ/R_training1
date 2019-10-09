@@ -105,13 +105,13 @@ emptydf = function(numrow, numcol, type, name){
   df = data.frame(matrix(NA, nrow=numrow, ncol=numcol));
   for (i in 1:numcol){
     print(type[i])
-    if(type[i] == 'numeric') {df[,i] = as.numeric(df[,i])
+    if('numeric' == type[i]) {df[,i] = as.numeric(df[,i])
                                colnames(df)[i] = name[i]};
-    if(type[i] == 'character') {df[,i] = as.character(df[,i])
+    if('character' == type[i]) {df[,i] = as.character(df[,i])
                                 colnames(df)[i] = name[i]};
-    if(type[i] == 'logical') {df[,i] = as.logical(df[,i])
+    if('logical' == type[i]) {df[,i] = as.logical(df[,i])
                             colnames(df)[i] = name[i]};
-    if(type[i] == 'factor') {df[,i] = as.factor(df[,i])
+    if('factor' == type[i]) {df[,i] = as.factor(df[,i])
                               colnames(df)[i] = name[i]};
   }
   return(df);
@@ -166,8 +166,7 @@ nrow(tumor.wilcoxon[tumor.wilcoxon$pvalue<=0.05,]);#24
 
 
 # 3. fold change
-tumor.fc = tumor.merge %>%
-  as_tibble()%>%
+tumor.fc=tumor.merge %>%
   mutate(mean.a = (Patient1+Patient2+Patient3)/3,
             mean.b = rowSums(.[5:13])/9,
          log.mean.a = log2(mean.a),
@@ -177,9 +176,55 @@ tumor.fc = tumor.merge %>%
 
 ggplot(tumor.fc, aes(logfc)) + geom_histogram(binwidth = 0.01)
 
-
 # Both the t test and wilcoxon log p values histgrams shows a log normal trend
-#and gave similar results about the p value
-# the fold change histgram shows a more normal trend.
+# and gave similar results about the p value
+# The fold change histgram shows a normal trend with mean around 0. shows that most genes 
+# do not have a big difference in mRNA level between type A and B.
 
 
+# 4. Use apply
+# apply(X, MARGIN, FUN)
+# -x: an array or matrix
+# -MARGIN:  take a value or range between 1 and 2 to define where to apply the function:
+# -MARGIN=1`: the manipulation is performed on rows
+# -MARGIN=2`: the manipulation is performed on columns
+# -MARGIN=c(1,2)` the manipulation is performed on rows and columns
+# -FUN: tells which function to apply. Built functions like mean, median, sum, min, max and even user-defined functions can be applied>
+
+sample.test = function(df,  test.type){
+ 
+    if('ttest' == test.type ) {result = tidy(t.test(df[2:4], df[5:13]))$p.value};
+    if('wilcoxon' == test.type ) {result = tidy(wilcox.test(df[2:4], df[5:13], alternative = "two.sided"))$p.value};
+    if('fc' == test.type ) {result = log2(mean(df[5:13])/mean(df[2:4]))};
+
+  return(result);
+}
+
+result.ttest = apply(as.matrix(sapply(tumor.merge, as.numeric)), 1, FUN =  sample.test,  test.type='ttest');
+result.wilcoxon = apply(as.matrix(sapply(tumor.merge, as.numeric)), 1, FUN =  sample.test,  test.type='wilcoxon');
+result.fc = apply(as.matrix(sapply(tumor.merge, as.numeric)), 1, FUN =  sample.test,  test.type='fc');
+
+### Question 4 #############################################################################################
+# Adjustment for multiple comparisons are needed to avoid spurious associations.
+# MUiltiple comparison can increase type I error
+# Bonferroni is conservative, less powerful: alpha* = alpha/(k  2)
+Bonferroni.ttest =p.adjust(tumor.ttest$pvalue, method = "bonferroni");
+hist(log(Bonferroni.ttest), breaks=50, xlim=c(-1.5,0));
+
+Bonferroni.wilcoxon =p.adjust(tumor.wilcoxon$pvalue, method = "bonferroni");
+hist(log(Bonferroni.wilcoxon),breaks = 50, xlim=c(-3,0));
+
+# False Discover Rate controls the number of false positives copared to the total number of positives
+# The methods BH (Benjamini–Hochberg, which is the same as FDR in R) and BY control the false discovery rate. 
+FDR.ttest =p.adjust(tumor.ttest$pvalue, method = "BH");
+hist(log(FDR.ttest), breaks = 50, xlim=c(-3,0));
+
+FDR.wilcoxon =p.adjust(tumor.wilcoxon$pvalue, method = "BH");
+hist(log(FDR.wilcoxon), breaks = 50, xlim = c(-1,0));
+
+x=tumor.ttest$pvalue;
+y=cbind(Bonferroni.ttest, FDR.ttest);
+
+
+# After the adjustment, the significant results was shrinked to 0. And the Bonferroni correction 
+# shows a more big effect on the original p value
