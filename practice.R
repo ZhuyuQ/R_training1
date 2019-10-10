@@ -14,6 +14,8 @@ library(ggplot2)
 library(dplyr)
 library(tidyr)
 library(broom)
+library(car)
+library(boot)
 
 ### FUNCTION_1 ######################################################
 #Input variables:
@@ -191,6 +193,13 @@ ggplot(tumor.fc, aes(logfc)) + geom_histogram(binwidth = 0.01)
 # -MARGIN=c(1,2)` the manipulation is performed on rows and columns
 # -FUN: tells which function to apply. Built functions like mean, median, sum, min, max and even user-defined functions can be applied>
 
+### Function_2 ###################################################################################
+# Input variables:
+# filename test type
+# output variables:
+# p values
+# description:
+# function that read in the dataset and test type, then conduct the test and output p values
 sample.test = function(df,  test.type){
  
     if('ttest' == test.type ) {result = tidy(t.test(df[2:4], df[5:13]))$p.value};
@@ -226,5 +235,99 @@ x=tumor.ttest$pvalue;
 y=cbind(Bonferroni.ttest, FDR.ttest);
 
 
-# After the adjustment, the significant results was shrinked to 0. And the Bonferroni correction 
+# After the adjustment, the number of significant results was shrinked to 0. And the Bonferroni correction 
 # shows a more big effect on the original p value
+
+### question 5 #############################################################################
+# 1. Calculate the median of the first three columns for each gene
+random.typea = apply(tumor.merge[,2:4],1,median);
+
+# 2. Use a permutation test to estimate the expected value for each gene:
+# a. Randomly select three columns from amongst all 12
+set.seed(11)
+random.3 = tumor.merge[, sample(2:ncol(tumor.merge),3, replace = F)];
+
+# b. Calculate their median
+random.median = apply(random.3,1,median);
+
+# c. Determine if this value is larger or smaller than that of the first 3 columns
+median.2 = cbind(random.typea,random.median);
+
+### Function_3 ##############################################################################
+# Input variables:
+# filename
+# output variables:
+# number of genes which have larger median than the first 3 columns
+# description:
+# function that read in the dataset compare the two columns of medians, output the number 
+# number of genes which have larger median than the first 3 columns.
+compare = function(df){
+  
+    if(df[1] > df[2]){
+      i=1
+    }else if(df[1] <= df[2]){
+      i=0
+    }
+  
+  return(i)
+}
+
+median.compare = apply(median.2, 1, compare);
+median.compare
+table(median.compare)
+# We can find out among 500 genes, 200 have a smaller median than the first 3 columns.
+
+# d. Repeat 1000 times
+
+
+### function_4 ###############################################################################
+# Input variables:
+# filename
+# output variables:
+# comparison results of two groups of median
+# description:
+# function that read in the dataset, generate the median of first 3 columns and random 3 columns,
+# compare the two columns of medians and if the random group median is bigger, i=1, if not, i=0. 
+# The final output is a list of 1 and 0
+
+sample.median = function(df){
+  # select 3 random columns from the dataframe
+  df1 = df[,sample(2:ncol(df), 3, replace = T)];
+  # calculate the median of the 3 values
+  median.1 = apply(df1, 1, median);
+  # calculate the median of first 3 column
+  median.a = apply(df[,2:4],1,median);
+  #put the two columns of median together
+  df2 = cbind(median.a, median.1);
+  # compare the two columns 
+  num = apply(df2, 1, compare);
+  return(num);
+  
+}
+
+set.seed(16)
+rep = tumor.merge$GeneID;
+for (i in 1:1000){
+  rep = cbind(rep,sample.median(tumor.merge))
+}
+
+# 3. Use the frequencies in 2. to estimate a p-value for each gene
+freq = apply(rep[, 2:1001], 1, sum)/1000
+
+# 4.Perform a false-discovery adjustment on the p-values (?p.adjust)
+FDR.freq =p.adjust(freq, method = "BH");
+hist(FDR.freq)
+
+# 5.Write your results (gene ID, observed median, expected median, p-value, adjusted p-value) to file in a tab-delimited format
+output = cbind(as.character(tumor.merge$GeneID), random.typea)
+output = cbind(output, apply(tumor.merge[,2:13],1,median))
+output = cbind(output,freq)
+output = cbind(output, FDR.freq)
+colnames(output) = c("GeneID", "Oberserved Median", "Expected Median", "P-value", "Adjusted P-value");
+write.table(output, "/cloud/project/result_q5.txt", append = FALSE, sep = " ", dec = ".",
+            col.names = TRUE)
+
+# 6.Plot a histogram of the (unadjusted) p-values. What does this tell you?
+hist(freq, breaks = 50)
+# h0: ma>mb h1: ma<mb
+# among 500 genes, most genes do not have a higher leverl of mRNA in typeA tumor.
