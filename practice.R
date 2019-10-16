@@ -261,6 +261,7 @@ median.2 = cbind(random.typea,random.median);
 # description:
 # function that read in the dataset compare the two columns of medians, output 1 if the
 # gene has larger median in the first 3 columns, else output 0.
+
 compare = function(df){
   
     if(df[1] > df[2]){
@@ -275,6 +276,7 @@ compare = function(df){
 median.compare = apply(median.2, 1, compare);
 median.compare
 table(median.compare)
+
 # We can find out among 500 genes, 200 have a smaller median in the first 3 columns.
 
 # d. Repeat 1000 times
@@ -563,6 +565,7 @@ table(median.compare)
 
 # d. Repeat 1000 times
 
+
 ### function_4 ###############################################################################
 # Input variables:
 # filename
@@ -596,7 +599,9 @@ for (i in 1:1000){
 
 # 3. Use the frequencies in 2. to estimate a p-value for each gene
 freq = apply(rep[, 2:1001], 1, sum)/1000
+
 hist(freq)
+
 
 # 4.Perform a false-discovery adjustment on the p-values (?p.adjust)
 FDR.freq =p.adjust(freq, method = "BH");
@@ -614,4 +619,6 @@ write.table(output, "/cloud/project/result_q5.txt", append = FALSE, sep = " ", d
 # 6.Plot a histogram of the (unadjusted) p-values. What does this tell you?
 hist(freq, breaks = 50)
 # h0: ma>mb h1: ma<mb
-# among 500 genes, most genes do not have a higher leverl of mRN
+
+# among 500 genes, most genes do not have a higher leverl of mRNA in typeA tumor.
+
