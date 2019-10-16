@@ -334,8 +334,13 @@ hist(freq, breaks = 50)
 # h0: ma>mb h1: ma<mb
 # among 500 genes, most genes do not have a higher leverl of mRNA in typeA tumor.
 
-
-
+# In the case where a set of observations can be assumed to be from an independent and 
+# identically distributed population, this can be implemented by constructing a number of 
+# resamples with replacement, of the observed dataset (and of equal size to the observed dataset).
+# Bootstrap would underestimate the skewed tails. so the distributionwould be more centered than the tru distribution
+# Cross-validation evaluates how well an algorithm generalizes, whereas bootstrapping actually helps 
+# the algorithm to generalize better.
+# Bootstrapping is more about building ensemble models or estimating parameters.
 
 
 ### Question 6 ##########################################################################
@@ -407,7 +412,8 @@ create.histogram(tumor.ttest2$pvalue, breaks = 50,type = 'count')
 
 # 6. plot pvalues in log space
 tumor.ttest2$log.pvalue = log(tumor.ttest2$pvalue);
-create.histogram(tumor.ttest2$log.pvalue, type = 'count', breaks = 20)
+create.histogram(tumor.ttest2$log.pvalue, type = 'count', breaks = 20, ylab.label = 'Counts', xlab.label = 'log(Pvalues)', xlab.cex = 1.5,
+                 ylab.cex = 1.5)
 
 # 7. Since log(0.05)=-3, from the plot we can find out that most p values from the ttest
 # are greater than 0.05. Therefore, among the 500 genes, there don't exsit a significant 
@@ -438,7 +444,8 @@ for (i in 1:nrow(tumor.merge)){
 create.histogram(tumor.wilcoxon2$pvalue, breaks = 20, type = 'count');
 #log transform the p values and plot the histogram
 tumor.wilcoxon2$log.pvalue = log(tumor.wilcoxon2$pvalue);
-create.histogram(tumor.wilcoxon2$log.pvalue, breaks = 20,type = 'count');
+create.histogram(tumor.wilcoxon2$log.pvalue, breaks = 20,type = 'count', ylab.label = 'Counts', xlab.label = 'log(Pvalues)', xlab.cex = 1.5,
+                 ylab.cex = 1.5);
 
 nrow(tumor.wilcoxon[tumor.wilcoxon$pvalue<=0.05,]);#24
 
@@ -454,7 +461,8 @@ tumor.fc2[i,] = get.foldchange(as.matrix(sapply(tumor.merge[i,], as.numeric)),
 }
 
 
-create.histogram(tumor.fc2$fc, type = 'count', breaks = 40)
+create.histogram(tumor.fc2$fc, type = 'count', breaks = 40, ylab.label = 'Counts', xlab.label = 'log(FC)', xlab.cex = 1.5,
+                 ylab.cex = 1.5)
 
 
 # Both the t test and wilcoxon log p values histgrams shows a log normal trend
@@ -504,18 +512,20 @@ result.fc2 = apply(as.matrix(sapply(tumor.merge, as.numeric)), 1,
 # MUiltiple comparison can increase type I error
 # Bonferroni is conservative, less powerful: alpha* = alpha/(k  2)
 Bonferroni.ttest =p.adjust(tumor.ttest$pvalue, method = "bonferroni");
-hist(log(Bonferroni.ttest), breaks=50, xlim=c(-1.5,0));
+create.histogram(log(Bonferroni.ttest), type = 'count',breaks=50, ylab.label = 'Counts', xlab.label = 'log(Pvalues)', xlab.cex = 1.5,
+                 ylab.cex = 1.5);
 
 Bonferroni.wilcoxon =p.adjust(tumor.wilcoxon$pvalue, method = "bonferroni");
-hist(log(Bonferroni.wilcoxon),breaks = 50, xlim=c(-3,0));
-
+create.histogram(log(Bonferroni.wilcoxon), type = 'count',ylab.label = 'Counts', xlab.label = 'log(Pvalues)', xlab.cex = 1.5,
+                 ylab.cex = 1.5);
 # False Discover Rate controls the number of false positives copared to the total number of positives
 # The methods BH (Benjamini–Hochberg, which is the same as FDR in R) and BY control the false discovery rate. 
 FDR.ttest =p.adjust(tumor.ttest$pvalue, method = "BH");
-hist(log(FDR.ttest), breaks = 50, xlim=c(-3,0));
+create.histogram(log(FDR.ttest), breaks=50,type = 'count',xlim=c(-3,0), ylab.label = 'Counts', xlab.label = 'log(Pvalues)', xlab.cex = 1.5,
+                 ylab.cex = 1.5);
 
 FDR.wilcoxon =p.adjust(tumor.wilcoxon$pvalue, method = "BH");
-hist(log(FDR.wilcoxon), breaks = 50, xlim = c(-1,0));
+create.histogram(log(FDR.wilcoxon), type = 'count', breaks=50);
 
 x=tumor.ttest$pvalue;
 y=cbind(Bonferroni.ttest, FDR.ttest);
@@ -600,13 +610,14 @@ for (i in 1:1000){
 # 3. Use the frequencies in 2. to estimate a p-value for each gene
 freq = apply(rep[, 2:1001], 1, sum)/1000
 
-hist(freq)
+create.histogram(freq, type = 'count',ylab.label = 'Counts', xlab.label = 'P values', xlab.cex = 1.5,
+                 ylab.cex = 1.5)
 
 
 # 4.Perform a false-discovery adjustment on the p-values (?p.adjust)
 FDR.freq =p.adjust(freq, method = "BH");
-hist(FDR.freq)
-
+create.histogram(FDR.freq, type = 'count',ylab.label = 'Counts', xlab.label = 'BH P values', xlab.cex = 1.5,
+                 ylab.cex = 1.5)
 # 5.Write your results (gene ID, observed median, expected median, p-value, adjusted p-value) to file in a tab-delimited format
 output = cbind(as.character(tumor.merge$GeneID), random.typea)
 output = cbind(output, apply(tumor.merge[,2:13],1,median))
@@ -619,6 +630,5 @@ write.table(output, "/cloud/project/result_q5.txt", append = FALSE, sep = " ", d
 # 6.Plot a histogram of the (unadjusted) p-values. What does this tell you?
 hist(freq, breaks = 50)
 # h0: ma>mb h1: ma<mb
-
 # among 500 genes, most genes do not have a higher leverl of mRNA in typeA tumor.
 
