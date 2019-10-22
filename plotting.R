@@ -23,6 +23,7 @@ library("hexbin");
 library("gridExtra");
 library("e1071");
 library("datasets");
+
 path = "/cloud/project/";
 input = c("BoutrosLab.utilities_1.9.10.tar.gz",
           "BoutrosLab.dist.overload_1.0.2.tar.gz",
@@ -36,6 +37,33 @@ for (i in 1:length(input)){
   
   library(unlist(strsplit(input[i], "_"))[1],character.only=TRUE);
 }
+
+
+
+### Function 1 ##############################################################
+##Input variables:
+#number of row, number of columns, column data type, and column names
+#Output variables:
+#empty dataset 
+#Description:
+#Function that create empty dataframe 
+
+emptydf = function(numrow, numcol, type, name){
+  df = data.frame(matrix(NA, nrow=numrow, ncol=numcol));
+  for (i in 1:numcol){
+    print(type[i])
+    if('numeric' == type[i]) {df[,i] = as.numeric(df[,i])
+    colnames(df)[i] = name[i]};
+    if('character' == type[i]) {df[,i] = as.character(df[,i])
+    colnames(df)[i] = name[i]};
+    if('logical' == type[i]) {df[,i] = as.logical(df[,i])
+    colnames(df)[i] = name[i]};
+    if('factor' == type[i]) {df[,i] = as.factor(df[,i])
+    colnames(df)[i] = name[i]};
+  }
+  return(df);
+}
+
 
 
 ### Question 1 ##################################################################################
@@ -65,7 +93,100 @@ create.scatterplot(
 )
 
 # 2b. Create a heatmap displaying data found in the 'Loblolly' dataset 
-Loblolly = datasets::Loblolly
+loblolly = datasets::Loblolly;
+loblolly = reshape(data = loblolly, idvar = "Seed",
+                   v.names = "height",
+                   timevar = "age",
+                   direction = "wide");
+loblolly$Seed = as.numeric(loblolly$Seed);
+loblolly.sort = loblolly[order(loblolly$Seed),];
+loblolly.matrix = as.matrix(loblolly.sort[,-1]);
+row.names(loblolly.matrix) = paste("seed", 1:14, sep = ".");
+colnames(loblolly.matrix) = c("3yrs", "5yrs", "10yrs", "15yrs", "20yrs", "25yrs");
+create.heatmap(
+  x = loblolly.matrix,
+  # format the colour key
+  colourkey.cex = 1,
+  colourkey.labels.at = seq(0, 70, 5),
+  # set labels to NA -- results in default labels
+  xaxis.lab = NA,
+  yaxis.lab = NA,
+  xaxis.cex = 0.8,
+  yatumor.ttest = emptydf(500, 2, c('character','numeric'), c('GeneID', 'pvalue'));
+xis.cex = 0.6,
+  # set font style (default is bold, 1 is roman)
+  xaxis.fontface = 1,
+  yaxis.fontface = 1,
+  
+  # specify clustering method
+  # if no clustering is desired, set this to "none"
+  clustering.method = "complete",
+  # select distance measure
+  rows.distance.method = "euclidean",
+  cols.distance.method = "manhattan"
+);
+
+
+# 2c. Take a look at the 'ChickWeight' dataset in the R Datasets package
+chickweight = datasets::ChickWeight;
+
+# chicken weight by time, spaghetti plot
+
+ggplot(data = chickweight, 
+       aes(x=Time, y = weight, group = Chick))+
+  geom_line()+ facet_grid(.~ Diet, scales='free')+
+  ggtitle("Chicken Weight By Time Under Different Diet, Spaghetti Plot")
+  
+chick.residual = chickweight %>%
+  group_by(Time,Diet) %>%
+  mutate(meanweight = mean(weight)) %>%
+  ungroup() %>%
+  mutate(residual = weight - meanweight) %>%
+  group_by(Chick,Diet) %>%
+  mutate(median.residual = median(residual)) %>%
+  ungroup();
+
+chick.stat = chick.residual %>%
+  group_by(Diet) %>%
+  mutate(min = min(median.residual),
+         q1 = quantile(median.residual,c(.25)),
+         q2 = quantile(median.residual,c(.5)),
+         q3 = quantile(median.residual,c(.75)),
+        max = max(median.residual)) %>%
+  ungroup()%>%
+  select(Diet,min, q1, q2, q3, max) %>%
+  unique();
+
+chick.id = chick.residual %>%
+  filter(median.residual %in% as.matrix(chick.stat[,-1]))
+
+ggplot(chick.id, aes(x = Time, y = weight, group = Chick)) + 
+  geom_line()+facet_grid(.~ Diet, scales='free') +
+  ggtitle("Weight By Time Under Different Diet, Spaghetti Plot",subtitle = "min,25%,50%,75%,max of the weight residuals")
+
+
+
+
+# chicken weight difference by time, box plot
+chickweight.dif = emptydf(nlevels(as.factor(chickweight$Chick)),
+                          nlevels(as.factor(chickweight$Time)) , 
+                      c('character',rep('numeric',nlevels(as.factor(chickweight$Time))-1 )), 
+                        c('chick', paste("dif", 1:nlevels(as.factor(chickweight$Time))-1 ,sep = ".")));
+
+chickweight$Time = as.character(chickweight$Time)
+chickweight.wide = chickweight %>%
+  group_by(Chick, Diet) %>%
+  spread(Time,weight, fill=NA, sep = ".")
+
+for(i in 1: (nlevels(as.factor(chickweight$Time))-1) ){
+  chickweight.dif [,i]= chickweight[,i+1]-chickweight[,i+1]
+    
+    
+}
+create.boxplot(formula = weight~time,
+               data = chickweight,subset(chickweight, "0" = time),
+                                         )
+               )
 
 
 
@@ -73,7 +194,8 @@ Loblolly = datasets::Loblolly
 
 
 
-### Question 2 ######################################################################################
 
 
+
+### Question 3 ######################################################################################
 
