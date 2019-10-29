@@ -136,6 +136,9 @@ ggplot(data = chickweight,
        aes(x=Time, y = weight, group = Chick))+
   geom_line()+ facet_grid(.~ Diet, scales='free')+
   ggtitle("Chicken Weight By Time Under Different Diet, Spaghetti Plot")
+
+# From the spaghetti plot, chicken tend to have a bigger increasement in weight under Diet 3.
+
   
 chick.residual = chickweight %>%
   group_by(Time,Diet) %>%
@@ -164,36 +167,49 @@ ggplot(chick.id, aes(x = Time, y = weight, group = Chick)) +
   geom_line()+facet_grid(.~ Diet, scales='free') +
   ggtitle("Weight By Time Under Different Diet, Spaghetti Plot",subtitle = "min,25%,50%,75%,max of the weight residuals")
 
-
+# Chicken tend to have higher vairation in weight as tim egoes by under Diet2. 
+# Least variation in weight was shown in chicken under diet4.
 
 
 # chicken weight difference by time, box plot
 chickweight.dif = emptydf(nlevels(as.factor(chickweight$Chick)),
-                          nlevels(as.factor(chickweight$Time)) , 
-                      c('character',rep('numeric',nlevels(as.factor(chickweight$Time))-1 )), 
-                        c('chick', paste("dif", 1:nlevels(as.factor(chickweight$Time))-1 ,sep = ".")));
+                          nlevels(as.factor(chickweight$Time))+3 , 
+                      c('character', 'character', rep('numeric',nlevels(as.factor(chickweight$Time)) )), 
+                        c('chick', 'diet', paste("dif", 0:nlevels(as.factor(chickweight$Time)) ,sep = ".")));
 
-chickweight$Time = as.character(chickweight$Time)
+chickweight$Time = as.character(chickweight$Time);
 chickweight.wide = chickweight %>%
   group_by(Chick, Diet) %>%
   spread(Time,weight, fill=NA, sep = ".")
 
+chickweight.wide  = chickweight.wide[, c(1,2,3,9,12,13,14,4,5,6,7,8,10,11)]
+
+# Calculate weight difference between each measurement
 for(i in 1: (nlevels(as.factor(chickweight$Time))-1) ){
-  chickweight.dif [,i]= chickweight[,i+1]-chickweight[,i+1]
-    
-    
+  chickweight.dif [,i+3]= chickweight.wide[,i+3]-chickweight.wide[,i+2]
 }
-create.boxplot(formula = weight~time,
-               data = chickweight,subset(chickweight, "0" = time),
-                                         )
-               )
+
+chickweight.dif[,1:3] = chickweight.wide[,1:3]
+
+chickweight.dif.long = chickweight.dif %>%
+  gather(interval,dif,dif.0:dif.11 )
 
 
+create.violinplot(formula = dif.0 ~ diet, 
+               data = chickweight.dif,
+               ylimits =  c(35,50)                        
+)
 
 
+ggplot(data = chickweight.dif.long,
+       aes(x = diet, y =dif, fill = diet)) + 
+  geom_boxplot()+
+  facet_grid(.~ interval)
 
-
-
+# From the boxplot, we can find out that there is not a much difference in weight between 4 group at time0.
+# Diet 1 tends to have the least weight on chicken, while Diet 3&4 have the most changes.
+# Diet 3 tends to have the most changes in the last few weeks. 
+# In the last few weeks the weight changes tend to have higher vairance in all diet groups.
 
 
 
