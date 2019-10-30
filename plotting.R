@@ -10,6 +10,7 @@
 
 ### PREABMBLE ########################################################
 library("tidyverse");
+library("janitor");
 library("ggplot2");
 library("dplyr");
 library("tidyr");
@@ -23,6 +24,8 @@ library("hexbin");
 library("gridExtra");
 library("e1071");
 library("datasets");
+library("RColorBrewer");
+
 
 path = "/cloud/project/";
 input = c("BoutrosLab.utilities_1.9.10.tar.gz",
@@ -217,4 +220,160 @@ ggplot(data = chickweight.dif.long,
 ### Question 3 ######################################################################################
 seq.control = read.table("/cloud/project/Q3_SeqControl_data", header=T);
 
+# Ste 1 Reorder data
+seq.control1 = seq.control[order(seq.control$yes.votes, decreasing = T),];
 
+# Step 2 Create the CPCG bars
+colour.scheme.large <- c(
+  'rosybrown1',
+  'rosybrown4',
+  'red',
+  'darkred',
+  'darkorange',
+  'gold',
+  'darkolivegreen3',
+  'darkgreen',
+  'aquamarine',
+  'cyan4',
+  'dodgerblue',
+  'darkblue',
+  'plum',
+  'magenta',
+  'darkorchid',
+  'purple4',
+  'gray70',
+  'gray30'
+);
+
+gene.heatmap = 
+  create.heatmap(
+  x = t(as.matrix(as.numeric(seq.control1$CPCG))),
+  clustering.method = "none",
+  scale.data = FALSE,
+  colour.scheme = colour.scheme.large[1:12],
+  total.col = 12,
+  force.grid.col = TRUE,
+  print.colour.key = FALSE,
+  # remove y-axis ticks
+  yaxis.tck = 0,
+  height = 1,
+  xaxis.lab = NULL,
+  yaxis.lab = "sample",
+  yat = 1,
+  yaxis.cex = 1);
+
+
+# Step 3 Create heatmaps for "Average.reads.start", "Unique.start.points", and "X..Bases...0.quality" 
+average.reads.start.heatmap = 
+  create.heatmap(
+    x = t(as.matrix(as.numeric(seq.control1$Average.reads.start))),
+    clustering.method = "none",
+    scale.data = FALSE,
+    colour.scheme = c("white", "deeppink"),
+    force.grid.col = TRUE,
+    print.colour.key = FALSE,
+    # remove y-axis ticks
+    yaxis.tck = 0,
+    height = 1,
+    xaxis.lab = NULL,
+    yaxis.lab = "sample",
+    yat = 1,
+    yaxis.cex = 1);
+  
+ 
+unique.start.points.heatmap = 
+  create.heatmap(
+    x = t(as.matrix(as.numeric(seq.control1$Unique.start.points))),
+    clustering.method = "none",
+    scale.data = FALSE,
+    colour.scheme = c("white", "darkblue"),
+    force.grid.col = TRUE,
+    print.colour.key = FALSE,
+    # remove y-axis ticks
+    yaxis.tck = 0,
+    height = 1,
+    xaxis.lab = NULL,
+    yaxis.lab = "sample",
+    yat = 1,
+    yaxis.cex = 1);
+
+x.base.0.quality.heatmap = 
+  create.heatmap(
+    x = t(as.matrix(as.numeric(seq.control1$X..Bases...0.quality))),
+    clustering.method = "none",
+    scale.data = FALSE,
+    colour.scheme = c("white", "darkorange"),
+    force.grid.col = TRUE,
+    print.colour.key = FALSE,
+    # remove y-axis ticks
+    yaxis.tck = 0,
+    height = 1,
+    xaxis.lab = NULL,
+    yaxis.lab = "sample",
+    yat = 1,
+    yaxis.cex = 1);
+
+# Step 4 Create FFPE bar
+seq.control1 = seq.control1 %>%
+  dplyr::mutate(FFPE =  ifelse("CPCG0102P" == CPCG | "CPCG0103P" == CPCG,1,0) );
+
+FFPE.heatmap = 
+  create.heatmap(
+    x = t(as.matrix(as.numeric(seq.control1$FFPE))),
+    clustering.method = "none",
+    scale.data = FALSE,
+    colour.scheme = c("white", "darkslategrey"),
+    force.grid.col = TRUE,
+    col.colour = "black",
+    print.colour.key = FALSE,
+    # remove y-axis ticks
+    yaxis.tck = 0,
+    height = 1,
+    xaxis.lab = NULL,
+    yaxis.lab = "sample",
+    yat = 1,
+    yaxis.cex = 1);
+
+# Step 5 Create the barplot
+barplot.colour.choice = c("grey", "black");
+barplot.colour = barplot.colour.choice[factor(seq.control1$outcome, levels = c(0,1))];
+
+yes.votes.barplot = create.barplot(
+  formula = yes.votes ~ c(1:72),
+  border.col = 'transparent',
+  data = seq.control1,
+  col = barplot.colour,
+  right.padding = 2,
+  xaxis.cex = 0.5,
+  abline.h = 0.5,
+  abline.lty = 2,
+  abline.col = 'darkgrey'
+);
+
+# Step 6 Create a legend for each of the covariates
+legends <- legend.grob( list(
+ 
+  # create legend for cpcgene sample heatmap
+  legend = list(
+    colours = colour.scheme.large[1:12],
+    title = expression(underline("Sample")),
+    labels = levels(seq_control_data_ordered$CPCG)
+
+  )
+    
+  # create legend for average.reads.start.heatmap
+  legend = list(
+    colours = c("white", "deeppink"),
+    title = expression(underline("Average reads/start")),
+    labels = levels(seq_control_data_ordered$CPCG),
+    height = 3,
+    pos.x = 0.23,
+    continuous = TRUE,
+
+    
+  )  
+  
+  
+  
+  )
+)
