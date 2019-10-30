@@ -112,8 +112,8 @@ create.heatmap(
   xaxis.lab = NA,
   yaxis.lab = NA,
   xaxis.cex = 0.8,
-  yatumor.ttest = emptydf(500, 2, c('character','numeric'), c('GeneID', 'pvalue'));
-xis.cex = 0.6,
+  yaxis.cex = 0.8,
+
   # set font style (default is bold, 1 is roman)
   xaxis.fontface = 1,
   yaxis.fontface = 1,
@@ -135,7 +135,7 @@ chickweight = datasets::ChickWeight;
 ggplot(data = chickweight, 
        aes(x=Time, y = weight, group = Chick))+
   geom_line()+ facet_grid(.~ Diet, scales='free')+
-  ggtitle("Chicken Weight By Time Under Different Diet, Spaghetti Plot")
+  ggtitle("Chicken Weight By Time Under Different Diet, Spaghetti Plot");
 
 # From the spaghetti plot, chicken tend to have a bigger increasement in weight under Diet 3.
 
@@ -161,11 +161,12 @@ chick.stat = chick.residual %>%
   unique();
 
 chick.id = chick.residual %>%
-  filter(median.residual %in% as.matrix(chick.stat[,-1]))
+  filter(median.residual %in% as.matrix(chick.stat[,-1]));
 
 ggplot(chick.id, aes(x = Time, y = weight, group = Chick)) + 
   geom_line()+facet_grid(.~ Diet, scales='free') +
-  ggtitle("Weight By Time Under Different Diet, Spaghetti Plot",subtitle = "min,25%,50%,75%,max of the weight residuals")
+  ggtitle("Weight By Time Under Different Diet, Spaghetti Plot",
+          subtitle = "min,25%,50%,75%,max of the weight residuals");
 
 # Chicken tend to have higher vairation in weight as tim egoes by under Diet2. 
 # Least variation in weight was shown in chicken under diet4.
@@ -173,7 +174,7 @@ ggplot(chick.id, aes(x = Time, y = weight, group = Chick)) +
 
 # chicken weight difference by time, box plot
 chickweight.dif = emptydf(nlevels(as.factor(chickweight$Chick)),
-                          nlevels(as.factor(chickweight$Time))+3 , 
+                          nlevels(as.factor(chickweight$Time))+2 , 
                       c('character', 'character', rep('numeric',nlevels(as.factor(chickweight$Time)) )), 
                         c('chick', 'diet', paste("dif", 0:nlevels(as.factor(chickweight$Time)) ,sep = ".")));
 
@@ -214,4 +215,6 @@ ggplot(data = chickweight.dif.long,
 
 
 ### Question 3 ######################################################################################
+seq.control = read.table("/cloud/project/Q3_SeqControl_data", header=T);
+
 
