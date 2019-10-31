@@ -351,29 +351,162 @@ yes.votes.barplot = create.barplot(
 );
 
 # Step 6 Create a legend for each of the covariates
-legends <- legend.grob( list(
+
+
+### HELPER FUNCTIONS ##############################################################################
+
+# function for creating miscellanious legends
+# col - colour, met - metric, lab - label
+create.legend <- function(col, met, lab){
+  # figure out the cuts
+  data <- seq.control1[,met];
+  cuts <- pretty(
+    c(min(data), max(data)),
+    n = 10
+  );
+  
+  # figure out a colour scheme
+  ColourFunction <- colorRamp(c('white', col), space = 'Lab');
+  my.palette <- rgb(ColourFunction(seq(0, 1, length.out = length(cuts) -1)), maxColorValue = 255);
+  
+  # middle index, used for getting the colours
+  mid.idx <- ceiling(length(my.palette) / 2);
+  
+  # legend values
+  vals <- format(
+    c(
+      cuts[3], 
+      (cuts[mid.idx] + cuts[mid.idx + 1]) / 2, # we don't need this value for ranges
+      cuts[length(cuts)-3] 
+    ),
+    scientific = FALSE
+  );
+  if(met == 'Unique.start.points'){
+    print(lab)
+    # reformat label
+    # lower value in scientific notation
+    l.s <- scientific.notation(x=as.numeric(vals[1]),digits=2);
+    lb  <- l.s$base;
+    le  <- l.s$exponent;
+    # upper value in scientific notation
+    u.s <- scientific.notation(x=as.numeric(vals[3]),digits=2);
+    ub  <- u.s$base;
+    ue  <- u.s$exponent;
+    # make labels
+    labels <- c(
+      as.expression(bquote("<" ~ .(lb) %*% 10^.(le))),  
+      as.expression(bquote(.(lb) %*% 10^.(le) ~ "-" ~ .(ub) %*% 10^.(ue))), 
+      as.expression(bquote(">" ~ .(ub) %*% 10^.(ue)))
+    )
+  } else{
+    labels <- as.character(
+      c(
+        sprintf("< %s", vals[1]), 
+        sprintf("%s - %s", vals[1], vals[3]),
+        sprintf("> %s", vals[3]))
+    )
+  }
+  
+  legend <- list(
+    legend = list(
+      colours = c(
+        my.palette[1],
+        my.palette[mid.idx],
+        my.palette[length(my.palette)]
+      ),
+      labels = labels,
+      title = as.expression(
+        substitute(
+          bold(
+            underline(label)
+          ),
+          env = list(
+            label = lab
+          )
+        )
+      )
+    )
+  );
+  
+  return(legend);
+}
+
+
  
   # create legend for cpcgene sample heatmap
-  legend = list(
+  sample.legend = list(
     colours = colour.scheme.large[1:12],
     title = expression(underline("Sample")),
-    labels = levels(seq_control_data_ordered$CPCG)
+    labels = levels(seq_control1$CPCG)
+)
+  
+# create legend for outcome heatmap
+  prep.legend = list(
+    colours = c("white", "darkslategrey"),
+    title = expression(underline("Sample preparation")),
+    lables = c('Frozen', 'FFPE')
+  ) 
+  
+  
+  
+  # create legend for x..base....0.quality heatmap
+  qual.legend = create.legend(
+    col =  "darkorange",
+    lab = "%Base > 0 quality",
+    met = "X..Bases...0.quality"
+  )    
 
-  )
-    
-  # create legend for average.reads.start.heatmap
-  legend = list(
-    colours = c("white", "deeppink"),
-    title = expression(underline("Average reads/start")),
-    labels = levels(seq_control_data_ordered$CPCG),
-    height = 3,
-    pos.x = 0.23,
-    continuous = TRUE,
-
-    
+  
+  # create legend for unique.start.point.heatmap
+  uni.start.legend = list(
+    col = "darkblue",
+    lab = "Unique start point",
+    met = "Unique.start.points"
   )  
   
-  
-  
-  )
-)
+
+  # create legend for average.reads.start.heatmap
+  ave.start.legend = list(
+    col = "deeppinnk",
+    lab = "Average reads/start",
+    met = "Average.reads.start"
+  )  
+  );
+
+covariate.legends = list(
+  sample.legend,
+  prep.legend, 
+  qual.legend, 
+  uni.start.legend, 
+  ave.start.legend
+);
+
+legends1 = BoutrosLab.plotting.general::legend.grob(
+  legends = covariate.legends,
+  title.cex = 0.75,
+  title.just = 'left',
+  label.cex = 0.65,
+  size = 2,
+  between.row = 1.5,
+  between.col = 0.5,
+  layout = c(2,3)
+);
+
+
+barplot.legend = list(
+    colours = c('grey', 'black'),
+    labels = c(
+      as.expression(substitute(x < '50x',list(x = ''))),
+      as.expression(substitute(x >= '50x',list(x = '')))
+    ),
+    title = expression(underline('Observed')
+);
+
+legend2 = legend.grob(legends = barplot.legend);
+
+
+
+
+
+
+
