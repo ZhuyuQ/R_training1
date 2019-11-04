@@ -245,32 +245,21 @@ colour.scheme.large <- c(
   'gray30'
 );
 
-gene.heatmap = 
-  create.heatmap(
-  x = t(as.matrix(as.numeric(seq.control1$CPCG))),
-  clustering.method = "none",
-  scale.data = FALSE,
-  colour.scheme = colour.scheme.large[1:12],
-  total.col = 12,
-  force.grid.col = TRUE,
-  grid.col = TRUE,
-  print.colour.key = FALSE,
-  # remove y-axis ticks
-  yaxis.tck = 0,
-  height = 1,
-  xaxis.lab = NULL,
-  yaxis.lab = NULL,
-  yat = 1,
-  yaxis.cex = 1);
+### Function 2 ##############################################################
+##Input variables:
+# data that need to create a bar plot, colour scheme
+#Output variables:
+# covariate bars
+#Description:
+#Function that create covariate bars
 
-
-# Step 3 Create heatmaps for "Average.reads.start", "Unique.start.points", and "X..Bases...0.quality" 
-average.reads.start.heatmap = 
-  create.heatmap(
-    x = t(as.matrix(as.numeric(seq.control1$Average.reads.start))),
+heatmap = function(data,colour){
+  plot = create.heatmap(
+    x = t(as.matrix(as.numeric(data))),
     clustering.method = "none",
     scale.data = FALSE,
-    colour.scheme = c("white", "deeppink"),
+    colour.scheme = colour,
+    total.col = 12,
     force.grid.col = TRUE,
     grid.col = TRUE,
     print.colour.key = FALSE,
@@ -281,63 +270,26 @@ average.reads.start.heatmap =
     yaxis.lab = NULL,
     yat = 1,
     yaxis.cex = 1);
+  return(plot);
   
- 
-unique.start.points.heatmap = 
-  create.heatmap(
-    x = t(as.matrix(as.numeric(seq.control1$Unique.start.points))),
-    clustering.method = "none",
-    scale.data = FALSE,
-    colour.scheme = c("white", "darkblue"),
-    force.grid.col = TRUE,
-    grid.col = TRUE,
-    print.colour.key = FALSE,
-    # remove y-axis ticks
-    yaxis.tck = 0,
-    height = 1,
-    xaxis.lab = NULL,
-    yaxis.lab = NULL,
-    yat = 1,
-    yaxis.cex = 1);
+};
 
-x.base.0.quality.heatmap = 
-  create.heatmap(
-    x = t(as.matrix(as.numeric(seq.control1$X..Bases...0.quality))),
-    clustering.method = "none",
-    scale.data = FALSE,
-    colour.scheme = c("white", "darkorange"),
-    force.grid.col = TRUE,
-    grid.col = TRUE,
-    print.colour.key = FALSE,
-    # remove y-axis ticks
-    yaxis.tck = 0,
-    height = 1,
-    xaxis.lab = NULL,
-    yaxis.lab = NULL,
-    yat = 1,
-    yaxis.cex = 1);
 
-# Step 4 Create FFPE bar
+gene.heatmap = heatmap(data = seq.control1$CPCG,colour = colour.scheme.large[1:12]);
+average.reads.start.heatmap = heatmap(data = seq.control1$Average.reads.start,
+                                      colour = c("white", "deeppink"));
+unique.start.points.heatmap = heatmap(data = seq.control1$Unique.start.points,
+                                     colour = c("white", "darkblue"));
+x.base.0.quality.heatmap   = heatmap(data = seq.control1$X..Bases...0.quality,
+          colour = c("white", "darkorange"));
+
+
+#  Create FFPE bar
 seq.control1 = seq.control1 %>%
   dplyr::mutate(FFPE =  ifelse("CPCG0102P" == CPCG | "CPCG0103P" == CPCG,1,0) );
 
-FFPE.heatmap = 
-  create.heatmap(
-    x = t(as.matrix(as.numeric(seq.control1$FFPE))),
-    clustering.method = "none",
-    scale.data = FALSE,
-    colour.scheme = c("white", "darkslategrey"),
-    force.grid.col = TRUE,
-    grid.col = TRUE,
-    col.colour = "black",
-    print.colour.key = FALSE,
-    # remove y-axis ticks
-    yaxis.tck = 0,
-    height = 1,
-    xaxis.lab = NULL,
-    yaxis.lab = NULL,
-    yat = 1,
-    yaxis.cex = 1);
+FFPE.heatmap = heatmap(data = seq.control1$FFPE,
+                       colour = c("white", "darkslategrey"));
 
 # Step 5 Create the barplot
 barplot.colour.choice = c("grey", "black");
@@ -503,3 +455,104 @@ legends2 = BoutrosLab.plotting.general::legend.grob(barplot.legend);
     height = 6,
     resolution = 1200,
   );
+
+### Question 4 ######################################################################################
+het = read.table("/cloud/project/Q4_HetStudy_data.txt", header=T);
+  
+# create covariate table
+covariate = as.data.frame(colnames(het[,1:28])); 
+names(covariate) = c("id");
+covariate$sample = substr(covariate$id, 1,8);
+covariate$cohort = c(rep("Bx",5),rep("Sx",23));
+# convert gleason score 3+4 as 1, 4+3 as 2, 4+4 as 3
+  covariate$gleason.score = c(1,1,2,1,2,1,2,2,3,3,1,1,1,1,1,2,1,2,2,2,1,1,1,3,2,2,2,1);
+  covariate$gleason.score.plus = c(1,rep(NA,14),rep(1,4),rep(NA,9));
+  
+covariate$tissue.type = substr(covariate$id, 9,10);
+
+# create matrix for gleason score positive
+gleason.score.plus.matrix = data.frame(matrix(NA, nrow = 28, ncol = 2));
+gleason.score.plus.matrix = cbind(gleason.score.plus.matrix,covariate$gleason.score.plus);
+gleason.score.plus.matrix = cbind(gleason.score.plus.matrix,data.frame(matrix(NA, nrow = 28, ncol = 1)));
+
+
+covariate.numeric = data.frame(lapply(covariate, as.character),stringsAsFactors = FALSE);
+covariate.numeric = covariate.numeric[,2:6];
+covariate.numeric = covariate.numeric %>%
+    dplyr::select(-c("gleason.score.plus"));
+ 
+            
+# convert covariate data to numeric
+# create sample id
+  covariate.numeric = covariate.numeric %>%
+    dplyr::mutate(sample.id = as.integer(as.factor(sample)));
+  covariate.numeric$sample = as.character(covariate.numeric$sample.id);
+  covariate.numeric = covariate.numeric[,-5]
+
+  #convert Bx (biopsy) as 11, and Sx (surgery) as 12
+  covariate.numeric$cohort["Bx" == covariate.numeric$cohort] = 11;
+  covariate.numeric$cohort["Sx" == covariate.numeric$cohort] = 12;
+  
+  
+  #convert gleason score
+  covariate.numeric$gleason.score[1 == covariate.numeric$gleason.score] = 13;
+  covariate.numeric$gleason.score[2 == covariate.numeric$gleason.score] = 14;
+  covariate.numeric$gleason.score[3 == covariate.numeric$gleason.score] = 15;
+  
+  
+  # concert  "F0" samples are Frozen(2), while all other samples are FPPE(1)
+  covariate.numeric$tissue.type["F0" != covariate.numeric$tissue.type] = 17;
+  covariate.numeric$tissue.type["F0" == covariate.numeric$tissue.type] = 16;
+  
+  
+# set colour scheme 
+sample.colour <- c( 'blue','purple','green','orange','yellow','black','wheat4','green4','grey','red4');
+cohort.colour <- c('royalblue', 'pink');
+gleason.score.colour <- c("yellow1", "orange","red");
+tissue.type.colour <- c('Frozen' = colours()[532],'FFPE' = colours()[557]); 
+  
+
+# create covairate bar on the right  
+covariate.bar  = create.heatmap(x = t(data.matrix(covariate.numeric)),
+                                clustering.method = "none",
+                                print.colour.key = FALSE,
+                                total.colours = 17,
+                                colour.scheme = c(sample.colour,cohort.colour,gleason.score.colour,tissue.type.colour),
+                                # add row lines
+                                force.grid.col = TRUE,
+                                grid.col = TRUE,
+                                grid.row = TRUE,
+                                row.colour = "black",
+                                col.colour = "black",
+                                row.pos = which(1 == t(gleason.score.plus.matrix[1:28,1:4]), arr.ind = TRUE)[,2],
+                                col.pos = which(1 == t(gleason.score.plus.matrix[1:28,1:4]), arr.ind = TRUE)[,1],
+                                cell.text =rep("+", 5),
+                                text.cex = 1
+                                );
+
+  
+#  create fraction plot
+het.frac = het %>%
+    dplyr::select(-Baca, -Berger, -Weischenfeldt); 
+het.frac$frac = rowSums(het.frac != 0)/28;
+  
+  het.frac = het.frac%>%
+    dplyr::mutate(location = strsplit(rownames(het),"-")[2],
+                  chr = substr(rownames(het),4,4));
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
