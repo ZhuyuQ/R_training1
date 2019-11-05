@@ -536,16 +536,72 @@ het.frac = het %>%
     dplyr::select(-Baca, -Berger, -Weischenfeldt); 
 het.frac$frac = rowSums(het.frac != 0)/28;
   
-  het.frac = het.frac%>%
-    dplyr::mutate(location = strsplit(rownames(het),"-")[2],
-                  chr = substr(rownames(het),4,4));
+het.frac = het.frac%>%
+    dplyr::mutate(
+      ends = sapply( strsplit(rownames(het),"-", fixed=TRUE),tail, 1),
+                  chr = substr(rownames(het),4,4),
+      number = c(1:3113));
   
+frac.plot = create.barplot(formula = frac ~ number,
+                           data = het.frac,
+                           groups = NULL,
+                           stack = FALSE,
+                           xlab.label = NULL,
+                           ylab.label = "Fraction",
+                           xaxis.lab =NULL,
+                           ylimits = c(0, 0.5),
+                           yat = NULL,
+                           bottom.padding = 0);
   
+ 
+# create literature covariate bars
+het.literature = cbind(het.frac[,30:32],het[,29:31]);
   
+het.literature = data.frame(lapply(het.literature, as.character),stringsAsFactors = FALSE);
+
+  # set colour scheme 
+  literature.colour1 = c('white', 'cornflowerblue'); #Weischenfeldt
+  literature.colour2 = c('white',  'darkolivegreen4'); #Berger
+  literature.colour3 = c('white','darkred'); #Baca
   
+  # create  
+  covariate.bar  = create.heatmap(x =data.matrix(het.literature[,3:5]),
+                                  clustering.method = "none",
+                                  print.colour.key = FALSE,
+                                  total.colours = 6,
+                                  colour.scheme = c(literature.colour3,literature.colour2,literature.colour1),
+                                  # add row lines
+                                  #col.lines = get.line.breaks(where("1000000" == het.literature$ends)),
+                                  force.grid.col = TRUE,
+                                  grid.col = TRUE,
+                                  force.grid.row = TRUE,
+                                  grid.row = TRUE,
+                                  row.colour = "black",
+                                  col.colour = "black"
+                                  
+  );
   
-  
-  
+
+   
+   
+# create main heatmap
+literature.colour <- c('white', 'cornflowerblue','darkolivegreen4','darkred'); 
+het.frac.plot = data.frame(lapply(het.frac, as.character),stringsAsFactors = FALSE);  
+ 
+main.heatmap = create.heatmap(x = data.matrix(het.frac.plot[,1:27]),
+                   clustering.method = "none",
+                   print.colour.key = FALSE,
+                   total.colours = 4,
+                   colour.scheme = c(literature.colour),
+                   # add row lines
+                   covariates.grid.col = het.frac.plot$chr,
+                   force.grid.col = TRUE,
+                   grid.col = TRUE,
+                   grid.row = TRUE,
+                   yat = covariate$tissue.type
+                   #row.colour = "black",
+                   #col.colour = "black"
+  );  
   
   
   
