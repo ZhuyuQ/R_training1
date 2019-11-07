@@ -539,8 +539,11 @@ het.frac$frac = rowSums(het.frac != 0)/28;
 het.frac = het.frac%>%
     dplyr::mutate(
       ends = sapply( strsplit(rownames(het),"-", fixed=TRUE),tail, 1),
-                  chr = substr(rownames(het),4,4),
+      chr =sapply( strsplit(rownames(het),":", fixed=TRUE),head, 1), 
       number = c(1:3113));
+
+het.frac= het.frac%>%
+    dplyr::mutate(chr.num = gsub("chr", "", chr));
   
 frac.plot = create.barplot(formula = frac ~ number,
                            data = het.frac,
@@ -550,7 +553,7 @@ frac.plot = create.barplot(formula = frac ~ number,
                            ylab.label = "Fraction",
                            xaxis.lab =NULL,
                            ylimits = c(0, 0.5),
-                           yat = NULL,
+                           yat = seq(0,0.6,0.25),
                            bottom.padding = 0);
   
  
@@ -565,19 +568,19 @@ het.literature = data.frame(lapply(het.literature, as.character),stringsAsFactor
   literature.colour3 = c('white','darkred'); #Baca
   
   # create  
-  covariate.bar  = create.heatmap(x =data.matrix(het.literature[,3:5]),
+  covariate.bar  = create.heatmap(x =data.matrix(het.literature[,4:6]),
                                   clustering.method = "none",
                                   print.colour.key = FALSE,
-                                  total.colours = 6,
-                                  colour.scheme = c(literature.colour3,literature.colour2,literature.colour1),
+                                  total.colours = 4,
+                                  colour.scheme = c(literature.colour3, literature.colour2,literature.colour1),
                                   # add row lines
-                                  #col.lines = get.line.breaks(where("1000000" == het.literature$ends)),
+                                  col.lines = which("1000000" == het.literature$ends),
                                   force.grid.col = TRUE,
                                   grid.col = TRUE,
                                   force.grid.row = TRUE,
                                   grid.row = TRUE,
-                                  row.colour = "black",
-                                  col.colour = "black"
+                                  row.colour = "black"
+                                  
                                   
   );
   
@@ -586,29 +589,104 @@ het.literature = data.frame(lapply(het.literature, as.character),stringsAsFactor
    
 # create main heatmap
 literature.colour <- c('white', 'cornflowerblue','darkolivegreen4','darkred'); 
-het.frac.plot = data.frame(lapply(het.frac, as.character),stringsAsFactors = FALSE);  
- 
-main.heatmap = create.heatmap(x = data.matrix(het.frac.plot[,1:27]),
+
+  # create x axis location 
+  het.frac.plot = het.frac%>%
+    dplyr::group_by(chr.num) %>%
+    dplyr::mutate(x.location = ifelse (number == round(mean(number),digits = 0),1,0)); 
+                    
+  het.frac.plot = data.frame(lapply(het.frac.plot, as.character),stringsAsFactors = FALSE); 
+  
+  library(dplyr);
+
+  # create y axis location  
+covariate = covariate %>%
+    dplyr::group_by(sample) %>%
+    dplyr::mutate(first = row_number() == min( row_number() ));
+  
+  
+main.heatmap = create.heatmap(x = data.matrix(het.frac.plot[,1:28]),
                    clustering.method = "none",
                    print.colour.key = FALSE,
                    total.colours = 4,
                    colour.scheme = c(literature.colour),
+                   
                    # add row lines
-                   covariates.grid.col = het.frac.plot$chr,
+                   row.lines = which(TRUE == covariate$first)+0.5,
+                   grid.row = TRUE,
+                   
+                   # add col lines
+                   col.lines = which("1000000" == het.literature$ends),
                    force.grid.col = TRUE,
                    grid.col = TRUE,
-                   grid.row = TRUE,
-                   yat = covariate$tissue.type
+                   
+                   #set labels for x and y axis
+                   xaxis.lab =  c(1:22,"X", "Y"),
+                   xat = which(1 == het.frac.plot$x.location),
+                   xaxis.cex = 0.6,
+                   xaxis.rot = 0,
+                   yaxis.lab =  covariate$tissue.type,
+                   yaxis.cex = 0.6
+                   
                    #row.colour = "black",
                    #col.colour = "black"
   );  
   
   
+ # create legend below
   
   
   
+#create legend on the left
   
+  legends = legend.grob(list(
+   
+     # create legend for samples
+    legend = list(
+      colours =  c( 'blue','purple','green','orange','yellow','black','wheat4','green4','grey','red4'),
+      labels = unique(covariate$sample),
+      title = expression(bold(underline('Patient ID')))
+    ),
+    
+    # create legend for cohort
+    legend = list(
+      colours =  c('royalblue', 'pink' ),
+      labels = c('Sx', 'Bx'),
+      title = expression(bold(underline('Cohort')))
+    ),  
+    
+    # create legend for Gleason score
+    legend = list(
+      colours =  c('yellow', 'orange','red' ),
+      labels = c('3+4', '4+3', '4+4'),
+      title = expression(bold(underline('Gleason score')))
+    ),
+    
+    # create legend for Tissue type
+    legend = list(
+      colours =  c(colours()[532],colours()[557]),
+      labels = c('FFPE', 'Frozen'),
+      title = expression(bold(underline('Tissue type')))
+    ),
+    
+    # create legend for Publication
+    legend = list(
+      colours =  c(colours()[532],colours()[557]),
+      labels = c('FFPE', 'Frozen'),
+      title = expression(bold(underline('Publication')))
+    ),   
+    
+
+    title.cex = 0.75,
+    title.just = 'left',
+    label.cex = 0.65,
+    size = 1.5,
+    between.row = 1.0,
+    between.col = 0.5
+    
+    
+  )
+  );
+ 
   
-  
-  
-  
+   
