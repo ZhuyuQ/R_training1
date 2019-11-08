@@ -568,7 +568,7 @@ het.literature = data.frame(lapply(het.literature, as.character),stringsAsFactor
   literature.colour3 = c('white','darkred'); #Baca
   
   # create  
-  covariate.bar  = create.heatmap(x =data.matrix(het.literature[,4:6]),
+  publication.bar  = create.heatmap(x =data.matrix(het.literature[,4:6]),
                                   clustering.method = "none",
                                   print.colour.key = FALSE,
                                   total.colours = 4,
@@ -639,54 +639,130 @@ main.heatmap = create.heatmap(x = data.matrix(het.frac.plot[,1:28]),
   
 #create legend on the left
   
-  legends = legend.grob(list(
-   
      # create legend for samples
+    pid.legend = list(
     legend = list(
       colours =  c( 'blue','purple','green','orange','yellow','black','wheat4','green4','grey','red4'),
       labels = unique(covariate$sample),
-      title = expression(bold(underline('Patient ID')))
-    ),
+      title = expression(bold(underline('Patient ID'))),
+      continuous = FALSE
+    )
+    );
     
     # create legend for cohort
+    cohort.legend = list(
     legend = list(
       colours =  c('royalblue', 'pink' ),
       labels = c('Sx', 'Bx'),
-      title = expression(bold(underline('Cohort')))
-    ),  
+      title = expression(bold(underline('Cohort'))),
+      continuous = FALSE
+    )
+    );
     
     # create legend for Gleason score
+    gs.legend = list(
     legend = list(
       colours =  c('yellow', 'orange','red' ),
       labels = c('3+4', '4+3', '4+4'),
-      title = expression(bold(underline('Gleason score')))
-    ),
+      title = expression(bold(underline('Gleason score'))),
+      continuous = FALSE
+    )
+    );
     
     # create legend for Tissue type
-    legend = list(
+    
+    tissue.legend = list(
+      legend = list(
       colours =  c(colours()[532],colours()[557]),
       labels = c('FFPE', 'Frozen'),
-      title = expression(bold(underline('Tissue type')))
-    ),
+      title = expression(bold(underline('Tissue type'))),
+      continuous = FALSE
+    )
+    );
     
     # create legend for Publication
-    legend = list(
+    pub.legend = list(
+      legend = list(
       colours =  c(colours()[532],colours()[557]),
       labels = c('FFPE', 'Frozen'),
-      title = expression(bold(underline('Publication')))
-    ),   
-    
+      title = expression(bold(underline('Publication'))),
+      continuous = FALSE
+    )
+    );
+ 
 
+  left.legends = legend.grob(   
+   legends = c(pid.legend, cohort.legend, gs.legend, tissue.legend, pub.legend),
     title.cex = 0.75,
     title.just = 'left',
     label.cex = 0.65,
-    size = 1.5,
+    size = 1,
     between.row = 1.0,
     between.col = 0.5
-    
-    
-  )
   );
- 
+
+  # create legend for notation
   
+  notation.legend = list(
+    legend = list(
+      colours = c('white', 'cornflowerblue','darkolivegreen4','darkred'),
+      labels = c("None", "CTX", "ITX", "INV"),
+      continuous = FALSE
+    )
+  );
+  
+  bottom.legend = legend.grob(
+   legends = notation.legend,
+   size = 1.25,
+   label.cex = 0.75
+
+  );
    
+  
+ # create multiplot
+  plot.objects = list(main.heatmap, covariate.bar, publication.bar,frac.plot);
+  
+  create.multiplot(
+    plot.objects = plot.objects,
+    #filename = 'HetStudy.tiff',
+    
+    panel.heights = c(1, rep(0.05, length(plot.objects)-1)),
+    panel.widths = c(1, 0.1),
+    
+    # specify the plot layout
+    # plot.layout specifies the number of rows and columns (3 rows, 2 columns)
+    # layout.skip specifies which of the plots in the specification will be skipped
+    # the skip specification starts at the bottom left, moves to the right and then up
+    plot.layout = c(2, 3),
+    layout.skip = c(FALSE,  FALSE, FALSE, TRUE, FALSE, TRUE),
+    xaxis.alternating = 0,
+    yaxis.alternating = 0,
+    #yaxis.cex = 1.15,
+    #ylab.padding = 6.5,
+    #right.padding = 35,
+    #bottom.padding = 1,
+    #y.spacing = -1.5,
+    
+    legend = list(
+      left = list(
+        fun = left.legends,
+        x = 1.02,
+        y = 1
+      ),
+      
+      inside = list(
+        x = 0.5,
+        y = -1,
+        fun = bottom.legend,
+        corner = c(0.5, 0.5)
+      )
+      ),
+      
+    print.new.legend = TRUE,
+    width = 12,
+    height = 6,
+    resolution = 1200,
+  
+  
+);
+  
