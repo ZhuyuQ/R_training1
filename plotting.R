@@ -518,6 +518,7 @@ covariate.bar  = create.heatmap(x = t(data.matrix(covariate.numeric)),
                                 print.colour.key = FALSE,
                                 total.colours = 17,
                                 colour.scheme = c(sample.colour,cohort.colour,gleason.score.colour,tissue.type.colour),
+                                at=seq(0.5,17.5,1),
                                 # add row lines
                                 force.grid.col = TRUE,
                                 grid.col = TRUE,
@@ -527,7 +528,9 @@ covariate.bar  = create.heatmap(x = t(data.matrix(covariate.numeric)),
                                 row.pos = which(1 == t(gleason.score.plus.matrix[1:28,1:4]), arr.ind = TRUE)[,2],
                                 col.pos = which(1 == t(gleason.score.plus.matrix[1:28,1:4]), arr.ind = TRUE)[,1],
                                 cell.text =rep("+", 5),
-                                text.cex = 1
+                                text.cex = 1,
+                                xaxis.tck = 0,
+                                yaxis.tck = 0
                                 );
 
   
@@ -547,14 +550,19 @@ het.frac= het.frac%>%
   
 frac.plot = create.barplot(formula = frac ~ number,
                            data = het.frac,
-                           groups = NULL,
+                           main = NULL,
                            stack = FALSE,
+                           xlab.top.label = NULL,
                            xlab.label = NULL,
                            ylab.label = "Fraction",
-                           xaxis.lab =NULL,
+                           ylab.cex = 1,
+                           xaxis.tck = 0,
+                           xaxis.lab =rep('',3113),
                            ylimits = c(0, 0.5),
                            yat = seq(0,0.6,0.25),
-                           bottom.padding = 0);
+                           yaxis.cex = 0.6,
+                           yaxis.tck =c(1,0)
+                           );
   
  
 # create literature covariate bars
@@ -563,25 +571,24 @@ het.literature = cbind(het.frac[,30:32],het[,29:31]);
 het.literature = data.frame(lapply(het.literature, as.character),stringsAsFactors = FALSE);
 
   # set colour scheme 
-  literature.colour1 = c('white', 'cornflowerblue'); #Weischenfeldt
-  literature.colour2 = c('white',  'darkolivegreen4'); #Berger
-  literature.colour3 = c('white','darkred'); #Baca
+  literature.colour = c('white', 'darkred', 'cornflowerblue', 'darkolivegreen4');
   
   # create  
   publication.bar  = create.heatmap(x =data.matrix(het.literature[,4:6]),
                                   clustering.method = "none",
                                   print.colour.key = FALSE,
-                                  total.colours = 4,
-                                  colour.scheme = c(literature.colour3, literature.colour2,literature.colour1),
+                                  #otal.colours = 4,
+                                  colour.scheme = c( literature.colour ),
                                   # add row lines
+                                  at=seq(-0.5,3.5,1),
+                                  
                                   col.lines = which("1000000" == het.literature$ends),
                                   force.grid.col = TRUE,
                                   grid.col = TRUE,
                                   force.grid.row = TRUE,
                                   grid.row = TRUE,
-                                  row.colour = "black"
-                                  
-                                  
+                                  row.colour = "black",
+                                  yaxis.tck = 0
   );
   
 
@@ -597,20 +604,21 @@ literature.colour <- c('white', 'cornflowerblue','darkolivegreen4','darkred');
                     
   het.frac.plot = data.frame(lapply(het.frac.plot, as.character),stringsAsFactors = FALSE); 
   
-  library(dplyr);
+
 
   # create y axis location  
 covariate = covariate %>%
     dplyr::group_by(sample) %>%
     dplyr::mutate(first = row_number() == min( row_number() ));
   
-  
+# create main heat map  
 main.heatmap = create.heatmap(x = data.matrix(het.frac.plot[,1:28]),
                    clustering.method = "none",
                    print.colour.key = FALSE,
+                 
                    total.colours = 4,
                    colour.scheme = c(literature.colour),
-                   
+                   at = seq(-0.5, 3.5, 1),
                    # add row lines
                    row.lines = which(TRUE == covariate$first)+0.5,
                    grid.row = TRUE,
@@ -626,6 +634,7 @@ main.heatmap = create.heatmap(x = data.matrix(het.frac.plot[,1:28]),
                    xaxis.cex = 0.6,
                    xaxis.rot = 0,
                    yaxis.lab =  covariate$tissue.type,
+                   yaxis.tck = c(1,0),
                    yaxis.cex = 0.6
                    
                    #row.colour = "black",
@@ -633,8 +642,28 @@ main.heatmap = create.heatmap(x = data.matrix(het.frac.plot[,1:28]),
   );  
   
   
- # create legend below
+ # create the bottom notation heatmap 
   
+ notation = matrix(1:4, nrow = 1); 
+  notation.heatmap = create.heatmap(x = notation,
+                                clustering.method = "none",
+                                print.colour.key = FALSE,
+                                total.colours = 4,
+                                colour.scheme = c('white', 'cornflowerblue','darkolivegreen4','darkred'),
+                                at = seq(0.5,4.5,1),
+                                force.grid.col = TRUE,
+                                grid.col = TRUE,
+
+                                xaxis.lab =  c("", "None", "CTX", "ITX","INV"),
+                                
+                                xaxis.cex = 0.6,
+                                xaxis.rot = 0,
+                                yaxis.lab =  NULL,
+                                yaxis.cex = 0.6,
+                                yaxis.tck = 0,
+                                right.padding = 0
+
+  );  
   
   
 #create legend on the left
@@ -652,7 +681,7 @@ main.heatmap = create.heatmap(x = data.matrix(het.frac.plot[,1:28]),
     # create legend for cohort
     cohort.legend = list(
     legend = list(
-      colours =  c('royalblue', 'pink' ),
+      colours =  c('pink', 'royalblue' ),
       labels = c('Sx', 'Bx'),
       title = expression(bold(underline('Cohort'))),
       continuous = FALSE
@@ -683,8 +712,8 @@ main.heatmap = create.heatmap(x = data.matrix(het.frac.plot[,1:28]),
     # create legend for Publication
     pub.legend = list(
       legend = list(
-      colours =  c(colours()[532],colours()[557]),
-      labels = c('FFPE', 'Frozen'),
+      colours =  c('darkred', 'cornflowerblue','darkolivegreen4'),
+      labels = c('Baca', 'Berger',"Weischenfeldt"),
       title = expression(bold(underline('Publication'))),
       continuous = FALSE
     )
@@ -700,69 +729,43 @@ main.heatmap = create.heatmap(x = data.matrix(het.frac.plot[,1:28]),
     between.row = 1.0,
     between.col = 0.5
   );
-
-  # create legend for notation
-  
-  notation.legend = list(
-    legend = list(
-      colours = c('white', 'cornflowerblue','darkolivegreen4','darkred'),
-      labels = c("None", "CTX", "ITX", "INV"),
-      continuous = FALSE
-    )
-  );
-  
-  bottom.legend = legend.grob(
-   legends = notation.legend,
-   size = 1.25,
-   label.cex = 0.75
-
-  );
    
   
  # create multiplot
-  plot.objects = list(main.heatmap, covariate.bar, publication.bar,frac.plot);
+  plot.objects = list(frac.plot,publication.bar, main.heatmap,covariate.bar,notation.heatmap );
   
-  create.multiplot(
+  create.multipanelplot(
     plot.objects = plot.objects,
-    #filename = 'HetStudy.tiff',
+    filename = 'HetStudy.tiff',
     
-    panel.heights = c(1, rep(0.05, length(plot.objects)-1)),
-    panel.widths = c(1, 0.1),
+    plot.objects.heights = c(0.6,0.2,1.4,0.2),
+    plot.objects.widths = c(1.1, 0.1),
     
-    # specify the plot layout
-    # plot.layout specifies the number of rows and columns (3 rows, 2 columns)
-    # layout.skip specifies which of the plots in the specification will be skipped
-    # the skip specification starts at the bottom left, moves to the right and then up
-    plot.layout = c(2, 3),
-    layout.skip = c(FALSE,  FALSE, FALSE, TRUE, FALSE, TRUE),
-    xaxis.alternating = 0,
-    yaxis.alternating = 0,
+    layout.skip = c(FALSE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, TRUE),
+    
+    layout.height = 4,
+    layout.width = 2,
+    
     #yaxis.cex = 1.15,
-    #ylab.padding = 6.5,
+    ylab.axis.padding = 3.5,
     #right.padding = 35,
     #bottom.padding = 1,
-    #y.spacing = -1.5,
+    y.spacing = c(-0.5,-0.5,-0.5),
+    x.spacing = 0.1,
     
     legend = list(
       left = list(
         fun = left.legends,
         x = 1.02,
         y = 1
-      ),
-      
-      inside = list(
-        x = 0.5,
-        y = -1,
-        fun = bottom.legend,
-        corner = c(0.5, 0.5)
       )
       ),
-      
-    print.new.legend = TRUE,
+    
+    left.legend.padding = 2,
+    
     width = 12,
     height = 6,
-    resolution = 1200,
-  
+    resolution = 1200
   
 );
   
