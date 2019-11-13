@@ -92,8 +92,8 @@ create.scatterplot(
   main.cex = 1,
   pch  =  1,  
   col  =  "black",
-  type  =  c  (  "p"  ,  "g"  ,  "r"  ),
-)
+  type  =  c  (  "p"  ,  "g"  ,  "r"  )
+);
 
 # 2b. Create a heatmap displaying data found in the 'Loblolly' dataset 
 loblolly = datasets::Loblolly;
@@ -184,31 +184,30 @@ chickweight.dif = emptydf(nlevels(as.factor(chickweight$Chick)),
 chickweight$Time = as.character(chickweight$Time);
 chickweight.wide = chickweight %>%
   group_by(Chick, Diet) %>%
-  spread(Time,weight, fill=NA, sep = ".")
+  spread(Time,weight, fill=NA, sep = ".");
 
 chickweight.wide  = chickweight.wide[, c(1,2,3,9,12,13,14,4,5,6,7,8,10,11)]
 
 # Calculate weight difference between each measurement
 for(i in 1: (nlevels(as.factor(chickweight$Time))-1) ){
   chickweight.dif [,i+3]= chickweight.wide[,i+3]-chickweight.wide[,i+2]
-}
+};
 
-chickweight.dif[,1:3] = chickweight.wide[,1:3]
+chickweight.dif[,1:3] = chickweight.wide[,1:3];
 
 chickweight.dif.long = chickweight.dif %>%
-  gather(interval,dif,dif.0:dif.11 )
+  gather(interval,dif,dif.0:dif.11 );
 
 
 create.violinplot(formula = dif.0 ~ diet, 
                data = chickweight.dif,
                ylimits =  c(35,50)                        
-)
-
+);
 
 ggplot(data = chickweight.dif.long,
        aes(x = diet, y =dif, fill = diet)) + 
   geom_boxplot()+
-  facet_grid(.~ interval)
+  facet_grid(.~ interval);
 
 # From the boxplot, we can find out that there is not a much difference in weight between 4 group at time0.
 # Diet 1 tends to have the least weight on chicken, while Diet 3&4 have the most changes.
@@ -420,7 +419,7 @@ legends2 = BoutrosLab.plotting.general::legend.grob(barplot.legend);
   yat.vals <- list();
   for (n in 1:(length(plot.objects)-1)) {
     yat.vals <- c(yat.vals, list(NULL));
-  }
+  };
 
 # combine plots
   create.multiplot(
@@ -487,7 +486,7 @@ covariate.numeric = covariate.numeric %>%
   covariate.numeric = covariate.numeric %>%
     dplyr::mutate(sample.id = as.integer(as.factor(sample)));
   covariate.numeric$sample = as.character(covariate.numeric$sample.id);
-  covariate.numeric = covariate.numeric[,-5]
+  covariate.numeric = covariate.numeric[,-5];
 
   #convert Bx (biopsy) as 11, and Sx (surgery) as 12
   covariate.numeric$cohort["Bx" == covariate.numeric$cohort] = 11;
@@ -555,7 +554,7 @@ frac.plot = create.barplot(formula = frac ~ number,
                            xlab.top.label = NULL,
                            xlab.label = NULL,
                            ylab.label = "Fraction",
-                           ylab.cex = 1,
+                           ylab.cex = 0.8,
                            xaxis.tck = 0,
                            xaxis.lab =rep('',3113),
                            ylimits = c(0, 0.5),
@@ -738,7 +737,7 @@ main.heatmap = create.heatmap(x = data.matrix(het.frac.plot[,1:28]),
     plot.objects = plot.objects,
     filename = 'HetStudy.tiff',
     
-    plot.objects.heights = c(0.6,0.2,1.4,0.2),
+    plot.objects.heights = c(0.6,0.3,1.4,0.2),
     plot.objects.widths = c(1.1, 0.1),
     
     layout.skip = c(FALSE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, TRUE),
@@ -746,12 +745,12 @@ main.heatmap = create.heatmap(x = data.matrix(het.frac.plot[,1:28]),
     layout.height = 4,
     layout.width = 2,
     
-    #yaxis.cex = 1.15,
+
     ylab.axis.padding = 3.5,
     #right.padding = 35,
     #bottom.padding = 1,
-    y.spacing = c(-0.5,-0.5,-0.5),
-    x.spacing = 0.1,
+    y.spacing = c(-1,-1,-1),
+    x.spacing = 0,
     
     legend = list(
       left = list(
