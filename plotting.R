@@ -735,7 +735,7 @@ main.heatmap = create.heatmap(x = data.matrix(het.frac.plot[,1:28]),
   
   create.multipanelplot(
     plot.objects = plot.objects,
-    filename = 'HetStudy.tiff',
+    #filename = 'HetStudy.tiff',
     
     plot.objects.heights = c(0.6,0.3,1.4,0.2),
     plot.objects.widths = c(1.1, 0.1),

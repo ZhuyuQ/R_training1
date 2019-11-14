@@ -233,7 +233,7 @@ Bonferroni.ttest =p.adjust(tumor.ttest$pvalue, method = "bonferroni");
 hist(log(Bonferroni.ttest), breaks=50, xlim=c(-1.5,0));
 
 Bonferroni.wilcoxon =p.adjust(tumor.wilcoxon$pvalue, method = "bonferroni");
-hist(log(Bonferroni.wilcoxon),breaks = 50, xlim=c(-3,0));
+hist( log(Bonferroni.wilcoxon), breaks = c(-0.05,0,0.05), xlim=c(-1,1));
 
 # False Discover Rate controls the number of false positives copared to the total number of positives
 # The methods BH (Benjamini–Hochberg, which is the same as FDR in R) and BY control the false discovery rate. 
