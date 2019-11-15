@@ -363,7 +363,7 @@ h.r =  round(max(seq.control1$Average.reads.start),2);
     legend = list(
       colours =  c("white", "deeppink"),
       labels = c(h.r, l.r),
-      title = expression(bold(underline('Unique start point'))),
+      title = expression(bold(underline('Average reads/start'))),
       continuous = TRUE
     )
   );
@@ -735,9 +735,9 @@ main.heatmap = create.heatmap(x = data.matrix(het.frac.plot[,1:28]),
   
   create.multipanelplot(
     plot.objects = plot.objects,
-    #filename = 'HetStudy.tiff',
+    filename = 'HetStudy.tiff',
     
-    plot.objects.heights = c(0.6,0.3,1.4,0.2),
+    plot.objects.heights = c(0.6,0.3,1.4,0.25),
     plot.objects.widths = c(1.1, 0.1),
     
     layout.skip = c(FALSE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, TRUE),
@@ -750,7 +750,7 @@ main.heatmap = create.heatmap(x = data.matrix(het.frac.plot[,1:28]),
     #right.padding = 35,
     #bottom.padding = 1,
     y.spacing = c(-1,-1,-1),
-    x.spacing = 0,
+    x.spacing = -0.4,
     
     legend = list(
       left = list(

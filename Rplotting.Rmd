@@ -7,12 +7,13 @@ output:
   html_document: default
 ---
 
-```{r setup, include=FALSE}
+
+```{r setup, include = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-```{r library, include=FALSE}
+```{r library, include = FALSE}
 library("tidyverse");
 library("janitor");
 library("ggplot2");
@@ -31,7 +32,7 @@ library("datasets");
 library("RColorBrewer");
 
 
-input = c("BoutrosLab.utilities_1.9.10.tar.gz",
+input <- c("BoutrosLab.utilities_1.9.10.tar.gz",
           "BoutrosLab.dist.overload_1.0.2.tar.gz",
           "BoutrosLab.statistics.general_2.1.3.tar.gz",
           "BoutrosLab.statistics.survival_0.4.20.tar.gz",
@@ -39,8 +40,8 @@ input = c("BoutrosLab.utilities_1.9.10.tar.gz",
           "BoutrosLab.plotting.general_5.9.8.tar.gz",
           "BoutrosLab.plotting.survival_3.0.10.tar.gz"
 );
+
 for (i in 1:length(input)){
-  
   library(unlist(strsplit(input[i], "_"))[1],character.only = TRUE);
 }
 ```
@@ -50,7 +51,7 @@ for (i in 1:length(input)){
 ##### 2a. Create a simple scatterplot using BoutrosLab.plotting.general
 
 ```{r q2a scatterplot}
-cars = datasets::cars;
+cars <- datasets::cars;
 summary(cars);
 
 create.scatterplot(
@@ -65,30 +66,34 @@ create.scatterplot(
   xlab.cex = 1,
   ylab.cex = 1,
   main.cex = 1,
-  pch  =  1,  
-  col  =  "black",
-  type  =  c  (  "p"  ,  "g"  ,  "r"  )
+  pch = 1,  
+  col=  "black",
+  type =  c  (  "p" , "g" , "r" )
 )
 ```
 
 ##### 2b. Create a heatmap displaying data found in the 'Loblolly' dataset 
 
 ```{r q2bheatmap}
-loblolly = datasets::Loblolly;
-loblolly = reshape(data = loblolly, idvar = "Seed",
+loblolly <- datasets::Loblolly;
+loblolly <- reshape(data = loblolly, idvar = "Seed",
                    v.names = "height",
                    timevar = "age",
                    direction = "wide");
-loblolly$Seed = as.numeric(loblolly$Seed);
-loblolly.sort = loblolly[order(loblolly$Seed),];
-loblolly.matrix = as.matrix(loblolly.sort[,-1]);
-row.names(loblolly.matrix) = paste("seed", 1:14, sep = ".");
-colnames(loblolly.matrix) = c("3yrs", "5yrs", "10yrs", "15yrs", "20yrs", "25yrs");
+
+loblolly$Seed <- as.numeric(loblolly$Seed);
+loblolly.sort <- loblolly[order(loblolly$Seed),];
+loblolly.matrix <- as.matrix(loblolly.sort[,-1]);
+row.names(loblolly.matrix) <- paste("seed", 1:14, sep = ".");
+colnames(loblolly.matrix) <- c("3yrs", "5yrs", "10yrs", "15yrs", "20yrs", "25yrs");
+
 create.heatmap(
   x = loblolly.matrix,
+  
   # format the colour key
   colourkey.cex = 1,
   colourkey.labels.at = seq(0, 70, 5),
+  
   # set labels to NA -- results in default labels
   xaxis.lab = NA,
   yaxis.lab = NA,
@@ -102,6 +107,7 @@ create.heatmap(
   # specify clustering method
   # if no clustering is desired, set this to "none"
   clustering.method = "complete",
+  
   # select distance measure
   rows.distance.method = "euclidean",
   cols.distance.method = "manhattan"
@@ -112,19 +118,19 @@ create.heatmap(
 ##### 2c. Take a look at the 'ChickWeight' dataset
 
 ```{r q2chickweight}
-chickweight = datasets::ChickWeight;
+chickweight <- datasets::ChickWeight;
 
 # chicken weight by time, spaghetti plot
 
 ggplot(data = chickweight, 
        aes(x = Time, y = weight, group = Chick))+
-  geom_line()+ facet_grid(.~ Diet, scales='free')+
+  geom_line()+ facet_grid(.~ Diet, scales = 'free')+
   ggtitle("Chicken Weight By Time Under Different Diet, Spaghetti Plot");
 
 # From the spaghetti plot, chicken tend to have a bigger increasement in weight under Diet 3.
 
   
-chick.residual = chickweight %>%
+chick.residual <- chickweight %>%
   group_by(Time,Diet) %>%
   mutate(meanweight = mean(weight)) %>%
   ungroup() %>%
@@ -133,7 +139,7 @@ chick.residual = chickweight %>%
   mutate(median.residual = median(residual)) %>%
   ungroup();
 
-chick.stat = chick.residual %>%
+chick.stat <- chick.residual %>%
   group_by(Diet) %>%
   mutate(min = min(median.residual),
          q1 = quantile(median.residual,c(.25)),
@@ -144,7 +150,7 @@ chick.stat = chick.residual %>%
   select(Diet,min, q1, q2, q3, max) %>%
   unique();
 
-chick.id = chick.residual %>%
+chick.id <- chick.residual %>%
   filter(median.residual %in% as.matrix(chick.stat[,-1]));
 
 ggplot(chick.id, aes(x = Time, y = weight, group = Chick)) + 
@@ -166,18 +172,18 @@ ggplot(chick.id, aes(x = Time, y = weight, group = Chick)) +
 #Description:
 #Function that create empty dataframe 
 
-emptydf = function(numrow, numcol, type, name){
-  df = data.frame(matrix(NA, nrow = numrow, ncol = numcol));
+emptydf <- function(numrow, numcol, type, name){
+  df <- data.frame(matrix(NA, nrow <- numrow, ncol <- numcol));
   for (i in 1:numcol){
     print(type[i])
-    if('numeric' == type[i]) {df[,i] = as.numeric(df[,i])
-    colnames(df)[i] = name[i]};
-    if('character' == type[i]) {df[,i] = as.character(df[,i])
-    colnames(df)[i] = name[i]};
-    if('logical' == type[i]) {df[,i] = as.logical(df[,i])
-    colnames(df)[i] = name[i]};
-    if('factor' == type[i]) {df[,i] = as.factor(df[,i])
-    colnames(df)[i] = name[i]};
+    if('numeric' == type[i]) {df[,i] <- as.numeric(df[,i])
+    colnames(df)[i] <- name[i]};
+    if('character' == type[i]) {df[,i] <- as.character(df[,i])
+    colnames(df)[i] <- name[i]};
+    if('logical' == type[i]) {df[,i] <- as.logical(df[,i])
+    colnames(df)[i] <- name[i]};
+    if('factor' == type[i]) {df[,i] <- as.factor(df[,i])
+    colnames(df)[i] <- name[i]};
   }
   return(df);
 }
@@ -186,26 +192,26 @@ emptydf = function(numrow, numcol, type, name){
 
 ```{r q2c boxplot}
 # chicken weight difference by time, box plot
-chickweight.dif = emptydf(nlevels(as.factor(chickweight$Chick)),
+chickweight.dif <- emptydf(nlevels(as.factor(chickweight$Chick)),
                           nlevels(as.factor(chickweight$Time))+2 , 
                       c('character', 'character', rep('numeric',nlevels(as.factor(chickweight$Time)) )), 
-                        c('chick', 'diet', paste("dif", 0:nlevels(as.factor(chickweight$Time)) ,sep = ".")));
+                        c('chick', 'diet', paste("dif", 0 : nlevels(as.factor(chickweight$Time)) , sep = ".")));
 
-chickweight$Time = as.character(chickweight$Time);
-chickweight.wide = chickweight %>%
+chickweight$Time <- as.character(chickweight$Time);
+chickweight.wide <- chickweight %>%
   group_by(Chick, Diet) %>%
   spread(Time,weight, fill=NA, sep = ".");
 
-chickweight.wide  = chickweight.wide[, c(1,2,3,9,12,13,14,4,5,6,7,8,10,11)];
+chickweight.wide  <- chickweight.wide[, c(01,02,03,09,12,13,14,04,05,06,07,08,10,11)];
 
 # Calculate weight difference between each measurement
 for(i in 1: (nlevels(as.factor(chickweight$Time))-1) ){
-  chickweight.dif [,i+3]= chickweight.wide[,i+3]-chickweight.wide[,i+2];
+  chickweight.dif [,i+3]<- chickweight.wide[,i+3]-chickweight.wide[,i+2];
 }
 
-chickweight.dif[,1:3] = chickweight.wide[,1:3];
+chickweight.dif[,1:3] <- chickweight.wide[,1:3];
 
-chickweight.dif.long = chickweight.dif %>%
+chickweight.dif.long <- chickweight.dif %>%
   gather(interval,dif,dif.0:dif.11 );
 
 
@@ -220,6 +226,32 @@ ggplot(data = chickweight.dif.long,
   geom_boxplot()+
   facet_grid(.~ interval);
 
+chickweight.dif.long = chickweight.dif.long %>%
+  mutate ( interval.num = sprintf("%02d", as.numeric(substr(interval,5,6))));
+
+diet.colour <- recode.vector(
+    chickweight.dif.long$diet,
+    list(
+        blue = 1,
+        hazel = 2,
+       green = 3,
+       brown = 4
+        )
+    );
+
+create.boxplot(formula = dif ~ diet | interval.num,
+    data = chickweight.dif.long,
+    xaxis.cex = 1,
+    yaxis.cex = 1,
+    ylab.label = "Weight changes",
+    xlab.label = "Diet groups",
+    xlab.cex = 1,
+    ylab.cex = 1,
+    layout = c(10,1)
+    );
+
+
+
 ```
 
 - From the boxplot, we can find out that there is not a big difference in weight between 4 groups at time0.
@@ -232,13 +264,13 @@ ggplot(data = chickweight.dif.long,
 ### Question 3
 
 ```{r q3read}
-seq.control = read.table("/cloud/project/Q3_SeqControl_data", header = T);
+seq.control <- read.table("/cloud/project/Q3_SeqControl_data", header = T);
 
 # Ste 1 Reorder data
-seq.control1 = seq.control[order(seq.control$yes.votes, decreasing = T),];
+seq.control1 <- seq.control[order(seq.control$yes.votes, decreasing = T),];
 
 # Step 2 Create the CPCG bars
-colour.scheme.large = c(
+colour.scheme.large <- c(
   'rosybrown1',
   'rosybrown4',
   'red',
@@ -270,9 +302,9 @@ colour.scheme.large = c(
 #Description:
 #Function that create covariate bars
 
-heatmap = function(data,colour){
-  plot = create.heatmap(
-    x = t(as.matrix(as.numeric(data))),
+heatmap <- function(data,colour){
+  plot <- create.heatmap(
+    x <- t(as.matrix(as.numeric(data))),
     clustering.method = "none",
     scale.data = FALSE,
     colour.scheme = colour,
@@ -280,6 +312,7 @@ heatmap = function(data,colour){
     force.grid.col = TRUE,
     grid.col = TRUE,
     print.colour.key = FALSE,
+    
     # remove y-axis ticks
     yaxis.tck = 0,
     height = 1,
@@ -288,33 +321,40 @@ heatmap = function(data,colour){
     yat = 1,
     yaxis.cex = 1);
   return(plot);
-  
 };
 ```
 
 ```{r q3heatmap}
 
-gene.heatmap = heatmap(data = seq.control1$CPCG,colour = colour.scheme.large[1:12]);
-average.reads.start.heatmap = heatmap(data = seq.control1$Average.reads.start,
-                                      colour = c("white", "deeppink"));
-unique.start.points.heatmap = heatmap(data = seq.control1$Unique.start.points,
-                                     colour = c("white", "darkblue"));
-x.base.0.quality.heatmap   = heatmap(data = seq.control1$X..Bases...0.quality,
+gene.heatmap <- heatmap(
+  data = seq.control1$CPCG,
+  colour = colour.scheme.large[1:12]);
+
+average.reads.start.heatmap <- heatmap(
+  data = seq.control1$Average.reads.start,
+  colour = c("white", "deeppink"));
+
+unique.start.points.heatmap <- heatmap(
+  data = seq.control1$Unique.start.points,
+  colour = c("white", "darkblue"));
+
+x.base.0.quality.heatmap   <- heatmap(
+  data = seq.control1$X..Bases...0.quality,
           colour = c("white", "darkorange"));
 
 
 #  Create FFPE bar
-seq.control1 = seq.control1 %>%
+seq.control1 <- seq.control1 %>%
   dplyr::mutate(FFPE =  ifelse("CPCG0102P" == CPCG | "CPCG0103P" == CPCG,1,0) );
 
-FFPE.heatmap = heatmap(data = seq.control1$FFPE,
+FFPE.heatmap <- heatmap(data = seq.control1$FFPE,
                        colour = c("white", "darkslategrey"));
 
 # Step 5 Create the barplot
-barplot.colour.choice = c("grey", "black");
-barplot.colour = barplot.colour.choice[factor(seq.control1$outcome, levels = c(0,1))];
+barplot.colour.choice <- c("grey", "black");
+barplot.colour <- barplot.colour.choice[factor(seq.control1$outcome, levels <- c(0,1))];
 
-yes.votes.barplot = create.barplot(
+yes.votes.barplot <- create.barplot(
   formula = yes.votes ~ c(1:72),
   border.col = 'transparent',
   data = seq.control1,
@@ -329,18 +369,18 @@ yes.votes.barplot = create.barplot(
 # Step 6 Create a legend for each of the covariates
 
 # create legend for cpcgene sample heatmap
-  sample.legend = list(
+  sample.legend <- list(
     legend = list(
     colours = colour.scheme.large[1:12],
     title = expression(underline("Sample")),
     labels = levels(seq.control1$CPCG),
     continuous = FALSE
-)
-    );
+ )
+);
 
   
 # create legend for outcome heatmap
-  prep.legend = list(
+  prep.legend <- list(
     legend = list(
       colours = c('white', 'black'), 
       labels = c('Frozen', 'FFPE'),
@@ -351,21 +391,20 @@ yes.votes.barplot = create.barplot(
   
   
 # create legend for x..base....0.quality heatmap
-qual.legend = list(
+qual.legend <- list(
   legend = list(
   colours =  c("white", "darkorange"),
   labels = c("97.0", "83.0"),
   title = expression(bold(underline('%Base > 0 quality'))),
   continuous = TRUE
   )
- 
 );  
 
 # create legend for unique.start.point.heatmap
-l.s = scientific.notation(x=min(seq.control1$Unique.start.points),digits=2);
-h.s = scientific.notation(x=max(seq.control1$Unique.start.points),digits=2); 
+l.s <- scientific.notation(x=min(seq.control1$Unique.start.points),digits=2);
+h.s <- scientific.notation(x=max(seq.control1$Unique.start.points),digits=2); 
 
-  uni.start.legend = list(
+  uni.start.legend <- list(
     legend = list(
       colours =  c("white", "darkblue"),
       labels = c(h.s, l.s),
@@ -376,21 +415,21 @@ h.s = scientific.notation(x=max(seq.control1$Unique.start.points),digits=2);
     
 
 # create legend for average.reads.start.heatmap
-l.r = round(min(seq.control1$Average.reads.start),2);
-h.r =  round(max(seq.control1$Average.reads.start),2);
+l.r <- round(min(seq.control1$Average.reads.start),2);
+h.r <-  round(max(seq.control1$Average.reads.start),2);
    
-  ave.start.legend = list(
-    legend = list(
-      colours =  c("white", "deeppink"),
-      labels = c(h.r, l.r),
-      title = expression(bold(underline('Unique start point'))),
-      continuous = TRUE
+  ave.start.legend <- list(
+    legend <- list(
+      colours <-  c("white", "deeppink"),
+      labels <- c(h.r, l.r),
+      title <- expression(bold(underline('Unique start point'))),
+      continuous <- TRUE
     )
   );
   
 
 #combine all covariates legends
-covariate.legends = c(
+covariate.legends <- c(
   sample.legend,
   prep.legend, 
   qual.legend, 
@@ -398,7 +437,7 @@ covariate.legends = c(
   ave.start.legend
 );
 
-legends1 = BoutrosLab.plotting.general::legend.grob(
+legends1 <- BoutrosLab.plotting.general::legend.grob(
   legends = covariate.legends,
   title.cex = 0.75,
   title.just = 'left',
@@ -410,7 +449,7 @@ legends1 = BoutrosLab.plotting.general::legend.grob(
 );
 
 # create legend for barplot
-barplot.legend = list(
+barplot.legend <- list(
 legend = list(
     colours = c('grey', 'black'),
     labels = c(
@@ -421,12 +460,12 @@ legend = list(
   )
 );
 
-legends2 = BoutrosLab.plotting.general::legend.grob(barplot.legend);
+legends2 <- BoutrosLab.plotting.general::legend.grob(barplot.legend);
 
 
 # Multiplot
   
-  plot.objects = list(
+  plot.objects <- list(
     average.reads.start.heatmap,
     unique.start.points.heatmap,
     x.base.0.quality.heatmap,
@@ -436,9 +475,9 @@ legends2 = BoutrosLab.plotting.general::legend.grob(barplot.legend);
   );
 
 # identify where plotting objects should be placed in the multiplot
-  yat.vals = list();
+  yat.vals <- list();
   for (n in 1:(length(plot.objects)-1)) {
-    yat.vals = c(yat.vals, list(NULL));
+    yat.vals <- c(yat.vals, list(NULL));
   }
 
 # combine plots
@@ -466,10 +505,8 @@ legends2 = BoutrosLab.plotting.general::legend.grob(barplot.legend);
         y = 0.98,
         fun = legends2
       )
-   
     ),
-  
-    print.new.legend = TRUE,
+      print.new.legend = TRUE,
     width = 12,
     height = 6,
     resolution = 1200,
@@ -479,63 +516,58 @@ legends2 = BoutrosLab.plotting.general::legend.grob(barplot.legend);
 ### Question 4 
 
 ```{r q4}
-het = read.table("/cloud/project/Q4_HetStudy_data.txt", header=T);
+het <- read.table("/cloud/project/Q4_HetStudy_data.txt", header=T);
 
 # create covariate table
-covariate = as.data.frame(colnames(het[,1:28])); 
-names(covariate) = c("id");
-covariate$sample = substr(covariate$id, 1,8);
-covariate$cohort = c(rep("Bx",5),rep("Sx",23));
-# convert gleason score 3+4 as 1, 4+3 as 2, 4+4 as 3
-covariate$gleason.score = c(1,1,2,1,2,1,2,2,3,3,1,1,1,1,1,2,1,2,2,2,1,1,1,3,2,2,2,1);
-covariate$gleason.score.plus = c(1,rep(NA,14),rep(1,4),rep(NA,9));
+covariate <-as.data.frame(colnames(het[,1:28])); 
+names(covariate) <- c("id");
+covariate$sample <- substr(covariate$id, 1,8);
+covariate$cohort <- c(rep("Bx",5),rep("Sx",23));
 
-covariate$tissue.type = substr(covariate$id, 9,10);
+# convert gleason score 3+4 as 1, 4+3 as 2, 4+4 as 3
+covariate$gleason.score <- c(1,1,2,1,2,1,2,2,3,3,1,1,1,1,1,2,1,2,2,2,1,1,1,3,2,2,2,1);
+covariate$gleason.score.plus <- c(1,rep(NA,14),rep(1,4),rep(NA,9));
+
+covariate$tissue.type <- substr(covariate$id, 9,10);
 
 # create matrix for gleason score positive
-gleason.score.plus.matrix = data.frame(matrix(NA, nrow = 28, ncol = 2));
-gleason.score.plus.matrix = cbind(gleason.score.plus.matrix,covariate$gleason.score.plus);
-gleason.score.plus.matrix = cbind(gleason.score.plus.matrix,data.frame(matrix(NA, nrow = 28, ncol = 1)));
+gleason.score.plus.matrix <- data.frame(matrix(NA, nrow <- 28, ncol <- 2));
+gleason.score.plus.matrix <- cbind(gleason.score.plus.matrix,covariate$gleason.score.plus);
+gleason.score.plus.matrix <- cbind(gleason.score.plus.matrix,data.frame(matrix(NA, nrow <- 28, ncol <- 1)));
 
-
-covariate.numeric = data.frame(lapply(covariate, as.character),stringsAsFactors = FALSE);
-covariate.numeric = covariate.numeric[,2:6];
-covariate.numeric = covariate.numeric %>%
+covariate.numeric <- data.frame(lapply(covariate, as.character),stringsAsFactors = FALSE);
+covariate.numeric <- covariate.numeric[,2:6];
+covariate.numeric <- covariate.numeric %>%
   dplyr::select(-c("gleason.score.plus"));
-
 
 # convert covariate data to numeric
 # create sample id
-covariate.numeric = covariate.numeric %>%
+covariate.numeric <- covariate.numeric %>%
   dplyr::mutate(sample.id = as.integer(as.factor(sample)));
-covariate.numeric$sample = as.character(covariate.numeric$sample.id);
-covariate.numeric = covariate.numeric[,-5]
+covariate.numeric$sample <- as.character(covariate.numeric$sample.id);
+covariate.numeric <- covariate.numeric[,-5];
 
 #convert Bx (biopsy) as 11, and Sx (surgery) as 12
 covariate.numeric$cohort["Bx" == covariate.numeric$cohort] = 11;
 covariate.numeric$cohort["Sx" == covariate.numeric$cohort] = 12;
 
-
 #convert gleason score
-covariate.numeric$gleason.score[1 == covariate.numeric$gleason.score] = 13;
-covariate.numeric$gleason.score[2 == covariate.numeric$gleason.score] = 14;
-covariate.numeric$gleason.score[3 == covariate.numeric$gleason.score] = 15;
-
+covariate.numeric$gleason.score[1 == covariate.numeric$gleason.score] <- 13;
+covariate.numeric$gleason.score[2 == covariate.numeric$gleason.score] <- 14;
+covariate.numeric$gleason.score[3 == covariate.numeric$gleason.score] <- 15;
 
 # concert  "F0" samples are Frozen(2), while all other samples are FPPE(1)
-covariate.numeric$tissue.type["F0" != covariate.numeric$tissue.type] = 17;
-covariate.numeric$tissue.type["F0" == covariate.numeric$tissue.type] = 16;
-
+covariate.numeric$tissue.type["F0" != covariate.numeric$tissue.type] <- 17;
+covariate.numeric$tissue.type["F0" == covariate.numeric$tissue.type] <- 16;
 
 # set colour scheme 
-sample.colour = c( 'blue','purple','green','orange','yellow','black','wheat4','green4','grey','red4');
-cohort.colour = c('royalblue', 'pink');
-gleason.score.colour = c("yellow1", "orange","red");
-tissue.type.colour = c('Frozen' = colours()[532],'FFPE' = colours()[557]); 
-
+sample.colour <- c( 'blue','purple','green','orange','yellow','black','wheat4','green4','grey','red4');
+cohort.colour <- c('royalblue', 'pink');
+gleason.score.colour <- c("yellow1", "orange","red");
+tissue.type.colour <- c('Frozen' = colours()[532],'FFPE' = colours()[557]); 
 
 # create covairate bar on the right  
-covariate.bar  = create.heatmap(x = t(data.matrix(covariate.numeric)),
+covariate.bar  <- create.heatmap(x = t(data.matrix(covariate.numeric)),
                                 clustering.method = "none",
                                 print.colour.key = FALSE,
                                 total.colours = 17,
@@ -555,22 +587,21 @@ covariate.bar  = create.heatmap(x = t(data.matrix(covariate.numeric)),
                                 yaxis.tck = 0
 );
 
-
 #  create fraction plot
-het.frac = het %>%
+het.frac <- het %>%
   dplyr::select(-Baca, -Berger, -Weischenfeldt); 
-het.frac$frac = rowSums(het.frac != 0)/28;
+het.frac$frac <- rowSums(het.frac != 0)/28;
 
-het.frac = het.frac%>%
+het.frac <- het.frac%>%
   dplyr::mutate(
     ends = sapply( strsplit(rownames(het),"-", fixed = TRUE),tail, 1),
     chr = sapply( strsplit(rownames(het),":", fixed = TRUE),head, 1), 
     number = c(1:3113));
 
-het.frac= het.frac%>%
+het.frac<- het.frac%>%
   dplyr::mutate(chr.num = gsub("chr", "", chr));
 
-frac.plot = create.barplot(formula = frac ~ number,
+frac.plot <- create.barplot(formula = frac ~ number,
                            data = het.frac,
                            main = NULL,
                            stack = FALSE,
@@ -586,17 +617,16 @@ frac.plot = create.barplot(formula = frac ~ number,
                            yaxis.tck = c(1,0)
 );
 
-
 # create literature covariate bars
-het.literature = cbind(het.frac[,30:32],het[,29:31]);
+het.literature <- cbind(het.frac[,30:32],het[,29:31]);
 
-het.literature = data.frame(lapply(het.literature, as.character),stringsAsFactors = FALSE);
+het.literature <- data.frame(lapply(het.literature, as.character),stringsAsFactors = FALSE);
 
 # set colour scheme 
-literature.colour = c('white', 'darkred', 'cornflowerblue', 'darkolivegreen4');
+literature.colour <- c('white', 'darkred', 'cornflowerblue', 'darkolivegreen4');
 
 # create  
-publication.bar  = create.heatmap(x =data.matrix(het.literature[,4:6]),
+publication.bar  <- create.heatmap(x =data.matrix(het.literature[,4:6]),
                                   clustering.method = "none",
                                   print.colour.key = FALSE,
                                   #otal.colours = 4,
@@ -613,28 +643,23 @@ publication.bar  = create.heatmap(x =data.matrix(het.literature[,4:6]),
                                   yaxis.tck = 0
 );
 
-
-
-
 # create main heatmap
-literature.colour = c('white', 'cornflowerblue','darkolivegreen4','darkred'); 
+literature.colour <- c('white', 'cornflowerblue','darkolivegreen4','darkred'); 
 
 # create x axis location 
-het.frac.plot = het.frac%>%
+het.frac.plot <- het.frac%>%
   dplyr::group_by(chr.num) %>%
   dplyr::mutate(x.location = ifelse (number == round(mean(number),digits = 0),1,0)); 
 
-het.frac.plot = data.frame(lapply(het.frac.plot, as.character),stringsAsFactors = FALSE); 
-
-
+het.frac.plot <- data.frame(lapply(het.frac.plot, as.character),stringsAsFactors = FALSE); 
 
 # create y axis location  
-covariate = covariate %>%
+covariate <- covariate %>%
   dplyr::group_by(sample) %>%
   dplyr::mutate(first = row_number() == min( row_number() ));
 
 # create main heat map  
-main.heatmap = create.heatmap(x = data.matrix(het.frac.plot[,1:28]),
+main.heatmap <- create.heatmap(x = data.matrix(het.frac.plot[,1:28]),
                               clustering.method = "none",
                               print.colour.key = FALSE,
                               
@@ -665,9 +690,8 @@ main.heatmap = create.heatmap(x = data.matrix(het.frac.plot[,1:28]),
 
 
 # create the bottom notation heatmap 
-
-notation = matrix(1:4, nrow = 1); 
-notation.heatmap = create.heatmap(x = notation,
+notation <- matrix(1:4, nrow = 1); 
+notation.heatmap <- create.heatmap(x = notation,
                                   clustering.method = "none",
                                   print.colour.key = FALSE,
                                   total.colours = 4,
@@ -675,23 +699,19 @@ notation.heatmap = create.heatmap(x = notation,
                                   at = seq(0.5,4.5,1),
                                   force.grid.col = TRUE,
                                   grid.col = TRUE,
-                                  
                                   xaxis.lab =  c("", "None", "CTX", "ITX","INV"),
-                                  
                                   xaxis.cex = 0.6,
                                   xaxis.rot = 0,
                                   yaxis.lab =  NULL,
                                   yaxis.cex = 0.6,
                                   yaxis.tck = 0,
                                   right.padding = 0
-                                  
 );  
 
 
 #create legend on the left
-
 # create legend for samples
-pid.legend = list(
+pid.legend <- list(
   legend = list(
     colours =  c( 'blue','purple','green','orange','yellow','black','wheat4','green4','grey','red4'),
     labels = unique(covariate$sample),
@@ -701,7 +721,7 @@ pid.legend = list(
 );
 
 # create legend for cohort
-cohort.legend = list(
+cohort.legend <- list(
   legend = list(
     colours =  c('pink', 'royalblue' ),
     labels = c('Sx', 'Bx'),
@@ -711,7 +731,7 @@ cohort.legend = list(
 );
 
 # create legend for Gleason score
-gs.legend = list(
+gs.legend <- list(
   legend = list(
     colours =  c('yellow', 'orange','red' ),
     labels = c('3+4', '4+3', '4+4'),
@@ -722,7 +742,7 @@ gs.legend = list(
 
 # create legend for Tissue type
 
-tissue.legend = list(
+tissue.legend <- list(
   legend = list(
     colours =  c(colours()[532],colours()[557]),
     labels = c('FFPE', 'Frozen'),
@@ -732,7 +752,7 @@ tissue.legend = list(
 );
 
 # create legend for Publication
-pub.legend = list(
+pub.legend <- list(
   legend = list(
     colours =  c('darkred', 'cornflowerblue','darkolivegreen4'),
     labels = c('Baca', 'Berger',"Weischenfeldt"),
@@ -741,8 +761,7 @@ pub.legend = list(
   )
 );
 
-
-left.legends = legend.grob(   
+left.legends <- legend.grob(   
   legends = c(pid.legend, cohort.legend, gs.legend, tissue.legend, pub.legend),
   title.cex = 0.75,
   title.just = 'left',
@@ -752,27 +771,20 @@ left.legends = legend.grob(
   between.col = 0.5
 );
 
-
 # create multiplot
-plot.objects = list(frac.plot,publication.bar, main.heatmap,covariate.bar,notation.heatmap );
-
+plot.objects <- list(frac.plot,publication.bar, main.heatmap,covariate.bar,notation.heatmap );
 
 create.multipanelplot(
   plot.objects = plot.objects,
   #filename = 'HetStudy.tiff',
-  
   plot.objects.heights = c(0.6,0.3,1.4,0.2),
   plot.objects.widths = c(1.1, 0.1),
-  
   layout.skip = c(FALSE, TRUE, FALSE, TRUE, FALSE, FALSE, FALSE, TRUE),
-  
   layout.height = 4,
   layout.width = 2,
   
   #yaxis.cex = 1.15,
   ylab.axis.padding = 3.5,
-  #right.padding = 35,
-  #bottom.padding = 1,
   y.spacing = c(-1,-1,-1),
   x.spacing = 0,
   

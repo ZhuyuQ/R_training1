@@ -7,6 +7,7 @@ output:
   html_document: default
 ---
 
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -30,7 +31,6 @@ library("e1071");
 library("datasets");
 library("RColorBrewer");
 
-
 path = "/cloud/project/";
 input = c("BoutrosLab.utilities_1.9.10.tar.gz",
           "BoutrosLab.dist.overload_1.0.2.tar.gz",
@@ -40,8 +40,8 @@ input = c("BoutrosLab.utilities_1.9.10.tar.gz",
           "BoutrosLab.plotting.general_5.9.8.tar.gz",
           "BoutrosLab.plotting.survival_3.0.10.tar.gz"
 );
+
 for (i in 1:length(input)){
-  
   library(unlist(strsplit(input[i], "_"))[1],character.only=TRUE);
 }
 ```
@@ -60,7 +60,8 @@ ahr.test.long=gather(ahr.test, Treatment, test, Control:Treated,
                      factor_key=TRUE);
 
 #plot induvidual change curve
-ggplot(data=ahr.test.long, aes(x=Treatment, y=test, group=number)) + geom_line();
+ggplot(data=ahr.test.long, aes(x=Treatment, y=test, group=number)) + 
+  geom_line();
 
 ```
 
@@ -168,14 +169,20 @@ tumor.ttest = emptydf(500, 2, c('character','numeric'), c('GeneID', 'pvalue'));
 tumor.ttest$GeneID=tumor.merge$GeneID;
 
 # perform ttest
+type.a = c("Patient1","Patient2","Patient3");
+type.b = c(paste0("Patient", 4:12));
+
 for (i in 1:nrow(tumor.merge)){
-  tumor.ttest[i,2] = tidy(t.test(tumor.merge[i,2:4],tumor.merge[i,5:13]))$p.value;
+  tumor.ttest[i,2] = tidy(t.test(tumor.merge[i,type.a],tumor.merge[i,type.b]))$p.value;
 }  
 ```
 
 ##### 4. Histogram of the p values
 ```{r q2.4 hist}
-ggplot(tumor.ttest,aes(pvalue)) + geom_histogram(binwidth = 0.025);
+ggplot(tumor.ttest,aes(pvalue)) + 
+  geom_histogram(binwidth = 0.025)+
+  ggtitle("Histogram of t test p values")+ 
+  theme(plot.title = element_text(hjust=0.5));
 ```
 
 The histogram shows a sparse distribution of p values. 
@@ -184,8 +191,11 @@ The histogram shows a sparse distribution of p values.
 
 ##### 6. Plot pvalues in log space
 ```{r 2.6plot pvalues}
-tumor.ttest$log.pvalue = log(tumor.ttest$pvalue);
-ggplot(tumor.ttest, aes(log.pvalue)) + geom_histogram();
+tumor.ttest$log10.pvalue = log10(tumor.ttest$pvalue);
+ggplot(tumor.ttest, aes(log10.pvalue)) + 
+  geom_histogram()+
+  ggtitle("Histogram of log10(ttest p values)")+ 
+  theme(plot.title = element_text(hjust=0.5));
 ```
 
 
@@ -207,17 +217,25 @@ tumor.wilcoxon$GeneID = tumor.merge$GeneID;
 
 # perform wilcoxon rank sum test
 for (i in 1:nrow(tumor.merge)){
-  tumor.wilcoxon[i,2] = tidy(wilcox.test(unlist(tumor.merge[i,2:4]), unlist(tumor.merge[i,5:13]), 
+  tumor.wilcoxon[i,2] = tidy(wilcox.test(unlist(tumor.merge[i,type.a]), unlist(tumor.merge[i,type.b]), 
                           alternative = "two.sided"))$p.value;
 }
 # 14 warnings show there are tied data
 
 # plot histogram
-ggplot(tumor.wilcoxon,aes(pvalue)) + geom_histogram(binwidth = 0.05);
+ggplot(tumor.wilcoxon,aes(pvalue)) + 
+  geom_histogram(binwidth = 0.01)+
+  ggtitle("Histogram of Wilcoxon rank-sum test p values")+ 
+  theme(plot.title = element_text(hjust=0.5));
+
 
 #log transform the p values and plot the histogram
-tumor.wilcoxon$log.pvalue = log(tumor.wilcoxon$pvalue);
-ggplot(tumor.wilcoxon, aes(log.pvalue)) + geom_histogram();
+tumor.wilcoxon$log10.pvalue = log10(tumor.wilcoxon$pvalue);
+
+ggplot(tumor.wilcoxon, aes(log10.pvalue)) + 
+  geom_histogram()+
+  ggtitle("Histogram of log10(Wilcoxon rank-sum test p values)")+ 
+  theme(plot.title = element_text(hjust=0.5));
 
 nrow(tumor.wilcoxon[tumor.wilcoxon$pvalue<=0.05,]);
 ```
@@ -226,13 +244,16 @@ nrow(tumor.wilcoxon[tumor.wilcoxon$pvalue<=0.05,]);
 ```{r q3.2fc}
 tumor.fc = tumor.merge %>%
   mutate(mean.a = (Patient1+Patient2+Patient3)/3,
-            mean.b = rowSums(.[5:13])/9,
-         log.mean.a = log(mean.a),
-         log.mean.b = log(mean.b),
-         logfc=log.mean.b - log.mean.a) %>%
-  select(GeneID, logfc);
+            mean.b = rowSums(.[type.b])/9,
+         log.mean.a = log2(mean.a),
+         log.mean.b = log2(mean.b),
+         log2fc=log.mean.b - log.mean.a) %>%
+  select(GeneID, log2fc);
 
-ggplot(tumor.fc, aes(logfc)) + geom_histogram(binwidth = 0.01);
+ggplot(tumor.fc, aes(log2fc)) + 
+  geom_histogram(binwidth = 0.01) + 
+  ggtitle("Histogram of log2(fold change)")+ 
+  theme(plot.title = element_text(hjust=0.5));
 ```
 
 Both the t test and wilcoxon log p values histgrams shows a log normal trend and gave similar results about the p value. The fold change histgram shows a normal trend with mean around 0, showing that most genes do not have a big difference in mRNA level between type A and B.
@@ -258,17 +279,25 @@ apply(X, MARGIN, FUN)
 # description:
 # function that read in the dataset and test type, then conduct the test and output p values
 
-sample.test = function(df,  test.type){
-    if('ttest' == test.type ) {result = tidy(t.test(df[2:4], df[5:13]))$p.value};
-    if('wilcoxon' == test.type ) {result = tidy(wilcox.test(df[2:4], df[5:13], alternative = "two.sided"))$p.value};
-    if('fc' == test.type ) {result = log2(mean(df[5:13])/mean(df[2:4]))};
+sample.test = function(df, test.type){
+    if('ttest' == test.type ) {
+      result <-tidy(t.test(df[2:4], df[5:13]))$p.value;
+      };
+    if('wilcoxon' == test.type ) {
+      result <- tidy(wilcox.test(df[2:4], df[5:13], alternative = "two.sided"))$p.value;
+      };
+    if('fc' == test.type ) {
+      result <- log2(mean(df[5:13])/mean(df[2:4]));
+      };
   return(result);
 }
 ```
 
 ```{r 3.3 apply}
 result.ttest = apply(as.matrix(sapply(tumor.merge, as.numeric)), 1, FUN =  sample.test,  test.type='ttest');
+
 result.wilcoxon = apply(as.matrix(sapply(tumor.merge, as.numeric)), 1, FUN =  sample.test,  test.type='wilcoxon');
+
 result.fc = apply(as.matrix(sapply(tumor.merge, as.numeric)), 1, FUN =  sample.test,  test.type='fc');
 ```
 
@@ -282,16 +311,16 @@ Use FDR and Bonferonni to adjust for multiple testing
 
 ```{r q4.1 Bonfferroni}
 Bonferroni.ttest =p.adjust(tumor.ttest$pvalue, method = "bonferroni");
-hist(log(Bonferroni.ttest), 
-     breaks = 50, 
-     xlim = c(-1.5,0),
-     main = "Histogram of log(ttest.pvalue)");
+hist(log10(Bonferroni.ttest), 
+     breaks = 100, 
+     xlim = c(-0.6,0),
+     main = "Histogram of log10(ttest.pvalue)");
 
 Bonferroni.wilcoxon =p.adjust(tumor.wilcoxon$pvalue, method = "bonferroni");
-hist(log(Bonferroni.wilcoxon),
-     xlim = c(-0.1,0.1),
-     breaks = c(-0.05,0,0.05),
-     main = "Histogram of log(wilcoxon.pvalue)");
+hist(log10(Bonferroni.wilcoxon),
+     xlim = c(-0.05,0.05),
+     breaks = c(-0.025,0,0.025),
+     main = "Histogram of log10(wilcoxon.pvalue)");
 ```
 
 - False Discover Rate controls the number of false positives copared to the total number of positives FDR = expected(#false predictions/# total predictions)
@@ -299,14 +328,16 @@ hist(log(Bonferroni.wilcoxon),
 
 ```{r q4.2 FDR}
 FDR.ttest =p.adjust(tumor.ttest$pvalue, method = "BH");
-hist(log(FDR.ttest), 
+hist(log10(FDR.ttest), 
      breaks = 50, 
-     xlim = c(-3,0));
+     xlim = c(-1,0),
+     main = "Histogram of log10(FDR.ttest.pvalue)");
 
 FDR.wilcoxon =p.adjust(tumor.wilcoxon$pvalue, method = "BH");
-hist(log(FDR.wilcoxon), 
+hist(log10(FDR.wilcoxon), 
      breaks = 50, 
-     xlim = c(-1,0));
+     xlim = c(-0.2,0),
+     main = "Histogram of log10(FDR.wilcoxon.pvalue)");
 
 x=tumor.ttest$pvalue;
 y=cbind(Bonferroni.ttest, FDR.ttest);
@@ -343,13 +374,11 @@ median.2 = cbind(random.typea,random.median);
 # gene has larger median in the first 3 columns, else output 0.
 
 compare = function(df){
-  
     if(df[1] > df[2]){
       i=1
     }else if(df[1] <= df[2]){
       i=0
     }
-  
   return(i);
 }
 
@@ -383,7 +412,6 @@ sample.median = function(df){
   # compare the two columns 
   num = apply(df2, 1, compare);
   return(num);
-  
 }
 
 set.seed(16);
@@ -397,13 +425,18 @@ for (i in 1:1000){
 ##### 3. Use the frequencies in 2. to estimate a p-value for each gene
 ```{r 5.3 compare}
 freq = apply(rep[, 2:1001], 1, sum)/1000;
-hist(freq);
+hist(freq,
+     main = "Histogram of frequencies"
+     );
 ```
 
 ##### 4.Perform a false-discovery adjustment on the p-values 
 ```{r 5.4adjustment}
 FDR.freq =p.adjust(freq, method = "BH");
-hist(FDR.freq);
+hist(FDR.freq,
+     xlim = c(0,1),
+     main = "Histogram of false-discovery adjustment p values"
+     );
 ```
 
 
@@ -415,17 +448,23 @@ output = cbind(output, apply(tumor.merge[,2:13],1,median));
 output = cbind(output,freq);
 output = cbind(output, FDR.freq);
 colnames(output) = c("GeneID", "Oberserved Median", "Expected Median", "P-value", "Adjusted P-value");
+
  write.table(output, "/cloud/project/result_q5.txt", 
             append = FALSE, 
             sep = " ", 
             dec = ".",
-            col.names = TRUE);
+            col.names = TRUE
+            );
 ```
 
 
 ##### 6.Plot a histogram of the (unadjusted) p-values. What does this tell you?
 ```{r 5.6histogram}
-hist(freq, breaks = 50);
+hist(freq, 
+    breaks = 50,
+    xlim = c(0,1),
+    main = "Histogram of unadjusted p values"
+    );
 ```
 
 h0: ma>mb h1: ma<mb
@@ -447,15 +486,16 @@ tumor1.sort = arrange(tumor1,GeneID);
 tumor2.sort = arrange(tumor2,GeneID);
 tumor.sort.cbind = cbind(tumor1.sort, tumor2.sort);
 tumor.sort.cbind = tumor.sort.cbind[,-5];
+
 #2.2 Merge
 tumor.merge = merge(tumor1, tumor2, all=T);
+
 #2.3 Verify if they get the same results
 table(tumor.sort.cbind == tumor.merge, useNA = 'ifany');
 # after removing the repeated gene ID colums in the sort&cbind way, the two ways gave the same results.
 
 # 3. Perform a t-test comparing the first three tumours to the last nine tumours for *each* gene using a for-loo
 # create empty dataframe to put p values
-
 tumor.ttest2 = emptydf(500, 2, c('character','numeric'), c('GeneID', 'pvalue'));
 tumor.ttest2$GeneID=tumor.merge$GeneID;
 
@@ -466,7 +506,8 @@ for (i in 1:nrow(tumor.merge)){
                                group2 = c(rep(F,4), rep(T,9)),
                                paired = FALSE,
                                var.equal = FALSE,
-                               alternative = 'two.sided');
+                               alternative = 'two.sided'
+                               );
 } 
 
 
@@ -485,16 +526,17 @@ create.histogram(tumor.ttest2$pvalue,
 # 5. It's not rotated
 
 # 6. plot pvalues in log space
-tumor.ttest2$log.pvalue = log(tumor.ttest2$pvalue);
-create.histogram(tumor.ttest2$log.pvalue, 
+tumor.ttest2$log10.pvalue = log10(tumor.ttest2$pvalue);
+create.histogram(tumor.ttest2$log10.pvalue, 
                  type = 'count', 
                  breaks = 20, 
                  ylab.label = 'Counts', 
-                 xlab.label = 'log(Pvalues)', 
+                 xlab.label = 'log10(Pvalues)', 
                  xlab.cex = 1.5,
                  ylab.cex = 1.5,
-                 main = "Histogram of log ttest p values",
-                 main.cex = 1.5 );
+                 main = "Histogram of log10 ttest p values",
+                 main.cex = 1.5 
+                 );
 
 # 7. Since log(0.05)=-3, from the plot we can find out that most p values from the ttest
 # are greater than 0.05. Therefore, among the 500 genes, there don't exsit a significant 
@@ -509,44 +551,47 @@ nrow(tumor.ttest[tumor.ttest$pvalue<=0.05,]);#33
 tumor.wilcoxon2 = emptydf(500, 2, c('character','numeric'), c('GeneID', 'pvalue'));
 
 tumor.wilcoxon2$GeneID = tumor.merge$GeneID;
+
 # perform wilcoxon rank sum test
 for (i in 1:nrow(tumor.merge)){
   tumor.wilcoxon2[i,2] = get.utest.p(as.matrix(sapply(tumor.merge[i,], as.numeric)),  
                                      group1 = c(F, rep(TRUE, 3), rep(FALSE, 9)),
                                      group2 = c(rep(FALSE,4), rep(TRUE, 9)),  
                                      paired = FALSE,
-                                     alternative = 'two.sided');
+                                     alternative = 'two.sided'
+                                     );
 }
 
 
 # 14 warnings show there are tied data
 
 # plot histogram
-
 create.histogram(tumor.wilcoxon2$pvalue, breaks = 20, type = 'count');
+
 #log transform the p values and plot the histogram
-tumor.wilcoxon2$log.pvalue = log(tumor.wilcoxon2$pvalue);
-create.histogram(tumor.wilcoxon2$log.pvalue, 
+tumor.wilcoxon2$log10.pvalue = log10(tumor.wilcoxon2$pvalue);
+create.histogram(tumor.wilcoxon2$log10.pvalue, 
                  breaks = 20,
                  type = 'count', 
                  ylab.label = 'Counts', 
-                 xlab.label = 'log(Pvalues)', 
+                 xlab.label = 'log10(Pvalues)', 
                  xlab.cex = 1.5,
                  ylab.cex = 1.5,
-                 main = "Histogram of log wilcoxon test p values",
-                 main.cex = 1.2);
+                 main = "Histogram of log10 wilcoxon test p values",
+                 main.cex = 1.2
+                 );
 
 nrow(tumor.wilcoxon[tumor.wilcoxon$pvalue<=0.05,]);#24
-
 
 # 3. fold change
 tumor.fc2 = emptydf(500, 2, c('character','numeric'), c('GeneID', 'fc'));
 
 for (i in 1:nrow(tumor.merge)){
 tumor.fc2[i,] = get.foldchange(as.matrix(sapply(tumor.merge[i,], as.numeric)),  
-                               group1 = c(F, rep(TRUE, 3), rep(FALSE, 9)),
+                          group1 = c(F, rep(TRUE, 3), rep(FALSE, 9)),
                            group2 = c(rep(FALSE,4), rep(TRUE, 9)), 
-                           logged = F);
+                           logged = F
+                          );
 }
 
 
@@ -558,7 +603,8 @@ create.histogram(tumor.fc2$fc,
                  xlab.cex = 1.5,
                  ylab.cex = 1.5,
                  main = "Histogram of fold change",
-                 main.cex = 1.5);
+                 main.cex = 1.5
+                 );
 
 
 
@@ -583,7 +629,8 @@ result.ttest2 =apply(as.matrix(sapply(tumor.merge, as.numeric)), 1,
                    FUN = get.ttest.p, 
                    group1 = c(rep(FALSE, 1), rep(TRUE, 3), rep(FALSE, 9)),
                    group2 = c(rep(FALSE,4), rep(TRUE, 9)),  paired = FALSE, var.equal = FALSE, 
-                   alternative = 'two.sided');
+                   alternative = 'two.sided'
+                   );
 
 result.wilcoxon2 = apply(as.matrix(sapply(tumor.merge, as.numeric)), 1, 
                         FUN = get.utest.p,
@@ -592,59 +639,65 @@ result.wilcoxon2 = apply(as.matrix(sapply(tumor.merge, as.numeric)), 1,
                         paired = FALSE,  
                         alternative = 'two.sided'
                         );
+
 result.fc2 = apply(as.matrix(sapply(tumor.merge, as.numeric)), 1, 
                   FUN =  get.foldchange,  
                   group1 = c(rep(FALSE, 1), rep(TRUE, 3), rep(FALSE, 9)),
                   group2 = c(rep(FALSE,4), rep(TRUE, 9)),  
-                  logged = F);
+                  logged = F
+                  );
 
 ### Question 4 #############################################################################################
 # Adjustment for multiple comparisons are needed to avoid spurious associations.
 # MUiltiple comparison can increase type I error
 # Bonferroni is conservative, less powerful: alpha* = alpha/(k  2)
 Bonferroni.ttest =p.adjust(tumor.ttest$pvalue, method = "bonferroni");
-create.histogram(log(Bonferroni.ttest), 
+create.histogram(log10(Bonferroni.ttest), 
                  type = 'count',
                  breaks=50, 
                  ylab.label = 'Counts', 
-                 xlab.label = 'log(Pvalues)', 
+                 xlab.label = 'log10(Pvalues)', 
                  xlab.cex = 1.5,
                  ylab.cex = 1.5,
-                 main = "Histogram of Bonferroni adjusted log ttest p values",
-                 main.cex = 1.2);
+                 main = "Histogram of Bonferroni adjusted log10 ttest p values",
+                 main.cex = 1.2
+                 );
 
 Bonferroni.wilcoxon =p.adjust(tumor.wilcoxon$pvalue, method = "bonferroni");
-create.histogram(log(Bonferroni.wilcoxon), 
+create.histogram(log10(Bonferroni.wilcoxon), 
                  type = 'count',
                  ylab.label = 'Counts', 
-                 xlab.label = 'log(Pvalues)', 
+                 xlab.label = 'log10(Pvalues)', 
                  xlab.cex = 1.5,
                  ylab.cex = 1.5,
-                 main = "Histogram of Bonferroni adjusted log Wilconxon test p values",
-                 main.cex = 1.2);
+                 main = "Histogram of Bonferroni adjusted log10 Wilconxon test p values",
+                 main.cex = 1.2
+                 );
 # False Discover Rate controls the number of false positives copared to the total number of positives
 # The methods BH (Benjamini–Hochberg, which is the same as FDR in R) and BY control the false discovery rate. 
 FDR.ttest =p.adjust(tumor.ttest$pvalue, method = "BH");
-create.histogram(log(FDR.ttest), 
+create.histogram(log10(FDR.ttest), 
                  breaks=50,type = 'count',
-                 xlim=c(-3,0), 
+                 xlim=c(-2,0), 
                  ylab.label = 'Counts', 
-                 xlab.label = 'log(Pvalues)', 
+                 xlab.label = 'log10(Pvalues)', 
                  xlab.cex = 1.5,
                  ylab.cex = 1.5,
-                 main = "Histogram of BH adjusted log ttest p values",
-                 main.cex = 1.2);
+                 main = "Histogram of BH adjusted log10 ttest p values",
+                 main.cex = 1.2
+                 );
 
 FDR.wilcoxon =p.adjust(tumor.wilcoxon$pvalue, method = "BH");
-create.histogram(log(FDR.wilcoxon), 
+create.histogram(log10(FDR.wilcoxon), 
                  type = 'count', 
                  breaks=50,
                  ylab.label = 'Counts', 
-                 xlab.label = 'log(Pvalues)', 
+                 xlab.label = 'log10(Pvalues)', 
                  xlab.cex = 1.5,
                  ylab.cex = 1.5,
-                main = "Histogram of BH adjusted log Wilconxon p values",
-                 main.cex = 1.2);
+                main = "Histogram of BH adjusted log10 Wilconxon p values",
+                 main.cex = 1.2
+                );
 
 x=tumor.ttest$pvalue;
 y=cbind(Bonferroni.ttest, FDR.ttest);
@@ -677,14 +730,12 @@ median.2 = cbind(random.typea,random.median);
 # function that read in the dataset compare the two columns of medians, output 1 if the
 # gene has larger median in the first 3 columns, else output 0.
 compare = function(df){
-  
   if(df[1] > df[2]){
-    i=1
+    i=1;
   }else if(df[1] <= df[2]){
-    i=0
+    i=0;
   }
-  
-  return(i)
+  return(i);
 }
 
 median.compare = apply(median.2, 1, compare);
@@ -717,7 +768,6 @@ sample.median = function(df){
   # compare the two columns 
   num = apply(df2, 1, compare);
   return(num);
-  
 }
 
 set.seed(16);
@@ -735,7 +785,8 @@ create.histogram(freq, type = 'count',
                  xlab.cex = 1.5,
                  ylab.cex = 1.5,
                  main = "Histogram of p values",
-                 main.cex = 1.5)
+                 main.cex = 1.5
+                 );
 
 
 # 4.Perform a false-discovery adjustment on the p-values (?p.adjust)
@@ -746,8 +797,10 @@ create.histogram(FDR.freq,
                  xlab.label = 'BH P values', 
                  xlab.cex = 1.5,
                  ylab.cex = 1.5,
-                 main = "Histogram of BH ajusted p values",
-                 main.cex = 1.5)
+                 main = "Histogram of BH adjusted p values",
+                 main.cex = 1.5
+                 );
+
 # 5.Write your results (gene ID, observed median, expected median, p-value, adjusted p-value) to file in a tab-delimited format
 output = cbind(as.character(tumor.merge$GeneID), random.typea);
 output = cbind(output, apply(tumor.merge[,2:13],1,median));
@@ -758,7 +811,8 @@ write.table(output, "/cloud/project/result_q5.txt",
             append = FALSE, 
             sep = " ", 
             dec = ".",
-            col.names = TRUE);
+            col.names = TRUE
+            );
 
 # 6.Plot a histogram of the (unadjusted) p-values. What does this tell you?
 create.histogram(freq, 
@@ -768,7 +822,8 @@ create.histogram(freq,
                  xlab.cex = 1.5,
                  ylab.cex = 1.5,
                  main = "Histogram of p values",
-                 main.cex = 1.5);
+                 main.cex = 1.5
+                 );
 # h0: ma>mb h1: ma<mb
 # among 500 genes, most genes do not have a higher level of mRNA in typeA tumor.
 
