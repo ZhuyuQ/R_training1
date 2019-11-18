@@ -311,16 +311,16 @@ Use FDR and Bonferonni to adjust for multiple testing
 
 ```{r q4.1 Bonfferroni}
 Bonferroni.ttest =p.adjust(tumor.ttest$pvalue, method = "bonferroni");
-hist(log10(Bonferroni.ttest), 
+hist(Bonferroni.ttest, 
      breaks = 100, 
-     xlim = c(-0.6,0),
-     main = "Histogram of log10(ttest.pvalue)");
+     xlim = c(0,1),
+     main = "Histogram of Bonferroni.ttest.pvalue");
 
 Bonferroni.wilcoxon =p.adjust(tumor.wilcoxon$pvalue, method = "bonferroni");
-hist(log10(Bonferroni.wilcoxon),
-     xlim = c(-0.05,0.05),
-     breaks = c(-0.025,0,0.025),
-     main = "Histogram of log10(wilcoxon.pvalue)");
+hist(Bonferroni.wilcoxon,
+     xlim = c(0,1),
+     breaks = c(0.5,0.6,0.7,0.8,0.9,1),
+     main = "Histogram of Bonferroni.wilcoxon.pvalue");
 ```
 
 - False Discover Rate controls the number of false positives copared to the total number of positives FDR = expected(#false predictions/# total predictions)
@@ -328,16 +328,16 @@ hist(log10(Bonferroni.wilcoxon),
 
 ```{r q4.2 FDR}
 FDR.ttest =p.adjust(tumor.ttest$pvalue, method = "BH");
-hist(log10(FDR.ttest), 
+hist(FDR.ttest, 
      breaks = 50, 
-     xlim = c(-1,0),
-     main = "Histogram of log10(FDR.ttest.pvalue)");
+     xlim = c(0,1),
+     main = "Histogram of FDR.ttest.pvalue");
 
 FDR.wilcoxon =p.adjust(tumor.wilcoxon$pvalue, method = "BH");
-hist(log10(FDR.wilcoxon), 
+hist(FDR.wilcoxon, 
      breaks = 50, 
-     xlim = c(-0.2,0),
-     main = "Histogram of log10(FDR.wilcoxon.pvalue)");
+     xlim = c(0,1),
+     main = "Histogram of FDR.wilcoxon.pvalue");
 
 x=tumor.ttest$pvalue;
 y=cbind(Bonferroni.ttest, FDR.ttest);
