@@ -221,11 +221,6 @@ create.violinplot(formula = dif.0 ~ diet,
 );
 
 
-ggplot(data = chickweight.dif.long,
-       aes(x = diet, y =dif, fill = diet)) + 
-  geom_boxplot()+
-  facet_grid(.~ interval);
-
 chickweight.dif.long = chickweight.dif.long %>%
   mutate ( interval.num = sprintf("%02d", as.numeric(substr(interval,5,6))));
 

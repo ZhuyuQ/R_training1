@@ -652,50 +652,50 @@ result.fc2 = apply(as.matrix(sapply(tumor.merge, as.numeric)), 1,
 # MUiltiple comparison can increase type I error
 # Bonferroni is conservative, less powerful: alpha* = alpha/(k  2)
 Bonferroni.ttest =p.adjust(tumor.ttest$pvalue, method = "bonferroni");
-create.histogram(log10(Bonferroni.ttest), 
+create.histogram(Bonferroni.ttest, 
                  type = 'count',
                  breaks=50, 
                  ylab.label = 'Counts', 
-                 xlab.label = 'log10(Pvalues)', 
+                 xlab.label = 'Pvalues', 
                  xlab.cex = 1.5,
                  ylab.cex = 1.5,
-                 main = "Histogram of Bonferroni adjusted log10 ttest p values",
+                 main = "Histogram of Bonferroni adjusted ttest p values",
                  main.cex = 1.2
                  );
 
 Bonferroni.wilcoxon =p.adjust(tumor.wilcoxon$pvalue, method = "bonferroni");
-create.histogram(log10(Bonferroni.wilcoxon), 
+create.histogram(Bonferroni.wilcoxon, 
                  type = 'count',
                  ylab.label = 'Counts', 
-                 xlab.label = 'log10(Pvalues)', 
+                 xlab.label = 'Pvalues', 
                  xlab.cex = 1.5,
                  ylab.cex = 1.5,
-                 main = "Histogram of Bonferroni adjusted log10 Wilconxon test p values",
+                 main = "Histogram of Bonferroni adjusted Wilconxon test p values",
                  main.cex = 1.2
                  );
 # False Discover Rate controls the number of false positives copared to the total number of positives
 # The methods BH (Benjamini–Hochberg, which is the same as FDR in R) and BY control the false discovery rate. 
 FDR.ttest =p.adjust(tumor.ttest$pvalue, method = "BH");
-create.histogram(log10(FDR.ttest), 
+create.histogram(FDR.ttest, 
                  breaks=50,type = 'count',
                  xlim=c(-2,0), 
                  ylab.label = 'Counts', 
-                 xlab.label = 'log10(Pvalues)', 
+                 xlab.label = 'Pvalues', 
                  xlab.cex = 1.5,
                  ylab.cex = 1.5,
-                 main = "Histogram of BH adjusted log10 ttest p values",
+                 main = "Histogram of BH adjusted ttest p values",
                  main.cex = 1.2
                  );
 
 FDR.wilcoxon =p.adjust(tumor.wilcoxon$pvalue, method = "BH");
-create.histogram(log10(FDR.wilcoxon), 
+create.histogram(FDR.wilcoxon, 
                  type = 'count', 
                  breaks=50,
                  ylab.label = 'Counts', 
-                 xlab.label = 'log10(Pvalues)', 
+                 xlab.label = 'Pvalues', 
                  xlab.cex = 1.5,
                  ylab.cex = 1.5,
-                main = "Histogram of BH adjusted log10 Wilconxon p values",
+                main = "Histogram of BH adjusted Wilconxon p values",
                  main.cex = 1.2
                 );
 
