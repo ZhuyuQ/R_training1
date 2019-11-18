@@ -678,7 +678,6 @@ create.histogram(Bonferroni.wilcoxon,
 FDR.ttest =p.adjust(tumor.ttest$pvalue, method = "BH");
 create.histogram(FDR.ttest, 
                  breaks=50,type = 'count',
-                 xlim=c(-2,0), 
                  ylab.label = 'Counts', 
                  xlab.label = 'Pvalues', 
                  xlab.cex = 1.5,
