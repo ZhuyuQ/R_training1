@@ -1,0 +1,9 @@
+Category: "training"
+Description: "a template nf pipeline for styling and standardization"
+Maintainers: "Boutros Lab Infrastructure BoutrosLabInfrastructure@mednet.ucla.edu"
+Contributors: "Zhuyu Qiu"
+Languages: "R"
+Dependencies: "R"
+References: []
+Job title: "bioinformatician" 
+Training completed: "2019-11"
