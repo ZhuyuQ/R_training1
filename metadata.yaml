@@ -1,9 +1,9 @@
-Category: "training"
-Description: "R training code"
-Maintainers: "zqiu@mednet.ucla.edu"
-Contributors: "Zhuyu Qiu"
-Languages: "R"
-Dependencies: "R"
-References: []
-Job title: "bioinformatician" 
-Training completed: "2019-11"
+Category: Training
+Description: This repository contains questions, R script, outputs from Boutros Lab Onboarding R training.
+Maintainers: Zhuyu Qiu (zqiu@mednet.ucla.edu)
+Contributors: Zhuyu Qiu (zqiu@mednet.ucla.edu)
+Languages: R
+Dependencies: BoutrosLab.plotting.general, BoutrosLab.utilities, BoutrosLab.statistics.general
+References: P’ng, C., Green, J., Chong, L.C. et al. BPG: Seamless, automated and interactive visualization of scientific data. BMC Bioinformatics 20, 42 (2019). 
+Job title: Jr. Bioinformatician 
+Training completed: 2019-11
